@@ -35,18 +35,19 @@ module.exports = function(app) {
   /* On a new user joining the server for the first time*/
   praxBot.on('serverNewMember', function(server, newDude) {
     /* 129037173486911488 is the id for the "general" textChannel */
-    praxBot.sendMessage('129037173486911488', newDude.username + ' is new on the Praxus Discord. Welcome ' + newDude.username + '. Feel free to introduce yourself!');
+    praxBot.sendMessage('129037173486911488', newDude.username +
+      ' is new on the Praxus Discord. Welcome ' +
+      newDude.username + '. Feel free to introduce yourself!');
   });
 
 
   /* On written message commands */
   praxBot.on('message', function(message) {
-
     /* Praxus Quotes */
-    if (message.content === 'praxusquote') {
+    if (message.content.toLowerCase() === 'praxusquote') {
       praxBot.sendMessage(message, b.randomQuote(message.content));
     }
-    if (message.content === 'starwarsquote') {
+    if (message.content.toLowerCase() === 'starwarsquote') {
 
       praxBot.sendMessage(message, b.randomQuote(message.content));
     }
@@ -54,13 +55,10 @@ module.exports = function(app) {
     if (message.content === 'botlog') {
       console.log(message);
     }
-    if (message.content === 'botRoles') {
-      var praxusServer = praxBot.servers.get("id", config.praxbot.id);
-      var curUser = praxBot.users.get("username", 'Amanda');
-      console.log(praxusServer.rolesOfUser(curUser));
-    }
-    if (message.content === 'qwe') {
-
+    // A little extra bot support for a powerful Drevan move.
+    if (message.content.toLowerCase() === 'get dunked' &&
+      message.author.username.toLowerCase() === 'drevan') {
+      praxBot.sendMessage(message, 'Oh snap!');
     }
   });
 
@@ -142,24 +140,6 @@ module.exports = function(app) {
         .catch(console.log);
     }
   });
-
-  // This function creates a new record for today.
-  // It will then pass the created record to the function that will update it for voip or game logs.
-  var saveDayDocument = function(year, month, day, nextFunction, user) {
-
-  };
-
-  var saveGameLog = function(id, user) {
-
-  };
-
-  var saveGamerlog = function(obj, user) {
-
-  };
-
-  var saveVoipLog = function(id, user) {
-
-  };
 
 
 };
