@@ -1,0 +1,28 @@
+{
+  "name": "Gamelog",
+  "plural": "gameplogs",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "playedOn": {
+      "type": "date",
+      "required": true
+    }
+  },
+  "validations": [],
+  "relations": {
+    "game": {
+      "type": "belongsTo",
+      "model": "Game"
+    },
+    "gamer": {
+      "type": "belongsTo",
+      "model": "Gamer"
+    }
+  },
+  "acls": [],
+  "methods": {}
+}

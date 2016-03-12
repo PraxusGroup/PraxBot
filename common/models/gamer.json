@@ -1,0 +1,34 @@
+{
+  "name": "Gamer",
+  "plural": "gamers",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "userName": {
+      "type": "string"
+    },
+    "lastSeen": {
+      "type": "string"
+    },
+    "role": {
+      "type": "string"
+    }
+  },
+  "validations": [],
+  "relations": {
+    "games": {
+      "type": "hasMany",
+      "model": "Game",
+      "through": "Gamelog"
+    },
+    "voiplogs": {
+      "type": "hasMany",
+      "model": "Voiplog"
+    }
+  },
+  "acls": [],
+  "methods": {}
+}

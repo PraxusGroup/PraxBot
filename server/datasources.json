@@ -1,0 +1,7 @@
+{
+  "mlab": {
+    "url": "mongodb://editor:Praxus123/*@ds061345.mlab.com:61345/praxbot",
+    "name": "mlab",
+    "connector": "mongodb"
+  }
+}

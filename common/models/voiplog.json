@@ -1,0 +1,23 @@
+{
+  "name": "Voiplog",
+  "plural": "voiplogs",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "connectedOn": {
+      "type": "date"
+    }
+  },
+  "validations": [],
+  "relations": {
+    "gamer": {
+      "type": "belongsTo",
+      "model": "Gamer"
+    }
+  },
+  "acls": [],
+  "methods": {}
+}

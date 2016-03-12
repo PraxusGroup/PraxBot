@@ -1,0 +1,34 @@
+{
+  "where": {
+    "gamelogdate": "2016-03-05"
+  },
+  "include": ["game", "gamer"]
+}
+
+
+{
+  "include": "gamers",
+  "where": {
+    "gamers": {
+      "userName": "Whiplash"
+    }
+  }
+}
+
+{
+  "filter": {
+    "include": {
+      "relation": "voiplogs",
+      "scope": {
+        "include": ["gamers"]
+      }
+    }
+  }
+}
+
+{
+  "include": {
+    "relation": "voiplogs"
+  },
+  "where": {"userName": "Whiplash"}
+}
