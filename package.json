@@ -21,7 +21,9 @@
   },
   "devDependencies": {
     "jshint": "^2.5.6",
-    "nsp": "^2.1.0"
+    "nsp": "^2.1.0",
+    "loopback-sdk-angular": "github:qeti/loopback-sdk-angular#188-angular2-support",
+    "loopback-sdk-angular-cli": "github:qeti/loopback-sdk-angular-cli#37-angular2-support"
   },
   "repository": {
     "type": "",
