@@ -3,17 +3,9 @@
   "version": "1.0.0",
   "main": "server/server.js",
   "scripts": {
-    "startnode": "node .",
+    "start": "node .",
     "pretest": "jshint .",
-    "posttest": "nsp check",
-
-
-    "startangulardev": "concurrently \"npm run tsc:w\" \"npm run lite\" ",
-    "tsc": "tsc",
-    "tsc:w": "tsc -w",
-    "lite": "lite-server",
-    "typings": "typings",
-    "postinstall": "typings install"
+    "posttest": "nsp check"
   },
   "dependencies": {
     "compression": "^1.0.3",
@@ -25,29 +17,13 @@
     "loopback-component-explorer": "^2.1.0",
     "loopback-datasource-juggler": "^2.39.0",
     "moment": "^2.11.2",
-    "serve-favicon": "^2.0.1",
-
-    "angular2": "2.0.0-beta.9",
-    "systemjs": "0.19.24",
-    "es6-promise": "^3.0.2",
-    "es6-shim": "^0.33.3",
-    "reflect-metadata": "0.1.2",
-    "rxjs": "5.0.0-beta.2",
-    "zone.js": "0.5.15"
-
-
+    "serve-favicon": "^2.0.1"
   },
   "devDependencies": {
     "jshint": "^2.5.6",
     "nsp": "^2.1.0",
-
     "loopback-sdk-angular": "github:qeti/loopback-sdk-angular#188-angular2-support",
-    "loopback-sdk-angular-cli": "github:qeti/loopback-sdk-angular-cli#37-angular2-support",
-
-    "concurrently": "^2.0.0",
-    "lite-server": "^2.1.0",
-    "typescript": "^1.8.7",
-    "typings": "^0.7.5"
+    "loopback-sdk-angular-cli": "github:qeti/loopback-sdk-angular-cli#37-angular2-support"
   },
   "repository": {
     "type": "",
