@@ -1,0 +1,2 @@
+Render new lb-services.ts with command:
+lb-ng ./server/server.js ./client/src/app/lb-services.ts -i angular2
