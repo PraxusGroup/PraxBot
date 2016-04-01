@@ -13,7 +13,8 @@ exports.parseDate = function(dateSent) {
     dbDate: moment(dateSent).format('YYYY-MM-DD'),
     year: moment(dateSent).format('YYYY'),
     month: moment(dateSent).format('MM'),
-    day: moment(dateSent).format('DD')
+    day: moment(dateSent).format('DD'),
+    dateObject: new Date().toISOString()
   };
   return obj;
 };

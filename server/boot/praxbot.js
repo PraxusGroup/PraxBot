@@ -68,7 +68,7 @@ module.exports = function(app) {
     if (user.voiceChannel.name !== 'AFK') {
 
       var today = new Date();
-      var curDate = b.parseDate(today);
+      var curDate = b.parseDate(today); // "2011-01-23"
 
       var praxusServer = praxBot.servers.get("id", config.praxbot.id);
       var primaryRole = b.getPrimaryRole(praxusServer.rolesOfUser(user));
