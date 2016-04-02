@@ -14,7 +14,7 @@ exports.parseDate = function(dateSent) {
     year: moment(dateSent).format('YYYY'),
     month: moment(dateSent).format('MM'),
     day: moment(dateSent).format('DD'),
-    dateObject: new Date().toISOString()
+    dateISO: new Date().toISOString()
   };
   return obj;
 };
@@ -37,16 +37,29 @@ exports.searchArrayNo = function(nameKey, myArray, myProperty) {
 
 exports.getPrimaryRole = function(rolesArray) {
   for (var i = 0; i < rolesArray.length; i++) {
-    if (exports.searchArrayNo('@Executive Administrator',rolesArray,'name') !== undefined) {
+    if (exports.searchArrayNo('@Executive Administrator', rolesArray, 'name') !== undefined) {
       return '@Executive Administrator';
-    } else if (exports.searchArrayNo('@Administrators',rolesArray,'name') !== undefined) {
+    } else if (exports.searchArrayNo('@Administrators', rolesArray, 'name') !== undefined) {
       return '@Administrator';
-    } else if (exports.searchArrayNo('@Member',rolesArray,'name') !== undefined) {
+    } else if (exports.searchArrayNo('@Member', rolesArray, 'name') !== undefined) {
       return '@Member';
-    } else if (exports.searchArrayNo('@Applicant',rolesArray,'name') !== undefined) {
+    } else if (exports.searchArrayNo('@Applicant', rolesArray, 'name') !== undefined) {
       return '@Applicant';
     } else {
       return '@Guest';
     }
   }
+};
+
+exports.getGameName = function(gameTitle) {
+  var returnTitle = gameTitle;
+  var titleToSwitch = gameTitle.toLowerCase();
+  switch (titleToSwitch) {
+    case 'arma III':
+      returnTitle = 'Arma 3';
+      break;
+    default:
+      break;
+  }
+  return returnTitle;
 };
