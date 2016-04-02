@@ -1,0 +1,23 @@
+{
+  "name": "Chatlog",
+  "plural": "chatlogs",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "chatOn": {
+      "type": "date"
+    }
+  },
+  "validations": [],
+  "relations": {
+    "gamer": {
+      "type": "belongsTo",
+      "model": "Gamer"
+    }
+  },
+  "acls": [],
+  "methods": {}
+}

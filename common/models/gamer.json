@@ -10,10 +10,19 @@
     "userName": {
       "type": "string"
     },
-    "lastSeen": {
+    "role": {
       "type": "string"
     },
-    "role": {
+    "lastDiscordChatMessage": {
+      "type": "string"
+    },
+    "lastDiscordVoiceConnect": {
+      "type": "string"
+    },
+    "lastForumPost": {
+      "type": "string"
+    },
+    "lastForumVisit": {
       "type": "string"
     }
   },

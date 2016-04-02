@@ -15,7 +15,9 @@
   },
   "Gamer": {
     "dataSource": "mlab",
-    "public": true
+    "public": true,
+    "$promise": {},
+    "$resolved": true
   },
   "Game": {
     "dataSource": "mlab",
@@ -26,6 +28,10 @@
     "public": true
   },
   "Gamelog": {
+    "dataSource": "mlab",
+    "public": true
+  },
+  "Chatlog": {
     "dataSource": "mlab",
     "public": true
   }
