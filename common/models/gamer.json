@@ -24,6 +24,9 @@
     },
     "lastForumVisit": {
       "type": "string"
+    },
+    "forumAlias": {
+      "type": "string"
     }
   },
   "validations": [],

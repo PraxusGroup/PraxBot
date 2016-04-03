@@ -34,9 +34,9 @@ module.exports = function(app) {
       .then(function(allGamers) {
         function updateGamer(i) {
           if (i < allGamers.length) {
-            var gamerURLTag = allGamers[i].userName.toLowerCase(),
+            console.log("Forum Activity Update " + (i + 1) + "/" + allGamers.length + " - " + allGamers[i].userName);
+            var gamerURLTag = ((allGamers[i].forumAlias) ? allGamers[i].forumAlias.toLowerCase() : allGamers[i].userName.toLowerCase().replace(" ", "-")),
               url = 'http://nodebb.praxusgroup.com/api/user/' + gamerURLTag;
-            console.log(url);
             request.get({
               url: url,
               json: true
@@ -44,19 +44,18 @@ module.exports = function(app) {
               var lastOnline = new Date(315532800000).toISOString(),
                 lastPost = new Date(315532800000).toISOString();
               if (!e && r.statusCode === 200) {
-                if (b.title === allGamers[i].userName) {
-                  lastOnline = new Date(b.lastonline).toISOString();
-                  lastPost = new Date(b.lastposttime).toISOString();
-                }
+                lastOnline = new Date(b.lastonline).toISOString();
+                lastPost = new Date(b.lastposttime).toISOString();
               }
               allGamers[i].lastForumPost = lastPost;
               allGamers[i].lastForumVisit = lastOnline;
               allGamers[i].save()
                 .then(function(complete) {
-                  console.log(complete);
                   updateGamer(i + 1);
                 });
             });
+          } else {
+            console.log("Forum activity update completed");
           }
         }
         updateGamer(0);
@@ -67,9 +66,9 @@ module.exports = function(app) {
   // Initiate the Cron that will get forum activity
   // cronTime: '0 */1 * * * *' --> every 1 minutes
   var forumCron = new CronJob({
-    cronTime: '0 */1 * * * *',
+    cronTime: '0 */3 * * * *',
     onTick: function() {
-      console.log("ForumCron: Starting");
+      console.log("Updating forum activity statistics");
       updateForumVariables();
     },
     start: true

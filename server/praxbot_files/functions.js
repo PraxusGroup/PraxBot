@@ -36,18 +36,24 @@ exports.searchArrayNo = function(nameKey, myArray, myProperty) {
 };
 
 exports.getPrimaryRole = function(rolesArray) {
-  for (var i = 0; i < rolesArray.length; i++) {
-    if (exports.searchArrayNo('@Executive Administrator', rolesArray, 'name') !== undefined) {
-      return '@Executive Administrator';
-    } else if (exports.searchArrayNo('@Administrators', rolesArray, 'name') !== undefined) {
-      return '@Administrator';
-    } else if (exports.searchArrayNo('@Member', rolesArray, 'name') !== undefined) {
-      return '@Member';
-    } else if (exports.searchArrayNo('@Applicant', rolesArray, 'name') !== undefined) {
-      return '@Applicant';
-    } else {
-      return '@Guest';
+  if (rolesArray.length > 0) {
+    //this array is not empty
+    for (var i = 0; i < rolesArray.length; i++) {
+      if (exports.searchArrayNo('@Executive Administrator', rolesArray, 'name') !== undefined) {
+        return '@Executive Administrator';
+      } else if (exports.searchArrayNo('@Administrators', rolesArray, 'name') !== undefined) {
+        return '@Administrator';
+      } else if (exports.searchArrayNo('@Member', rolesArray, 'name') !== undefined) {
+        return '@Member';
+      } else if (exports.searchArrayNo('@Applicant', rolesArray, 'name') !== undefined) {
+        return '@Applicant';
+      } else {
+        return '@Guest';
+      }
     }
+  } else {
+    //this array is empty
+    return '@Guest';
   }
 };
 
