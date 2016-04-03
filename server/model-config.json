@@ -14,25 +14,25 @@
     ]
   },
   "Gamer": {
-    "dataSource": "mlab",
+    "dataSource": "memory",
     "public": true,
     "$promise": {},
     "$resolved": true
   },
   "Game": {
-    "dataSource": "mlab",
+    "dataSource": "memory",
     "public": true
   },
   "Voiplog": {
-    "dataSource": "mlab",
+    "dataSource": "memory",
     "public": true
   },
   "Gamelog": {
-    "dataSource": "mlab",
+    "dataSource": "memory",
     "public": true
   },
   "Chatlog": {
-    "dataSource": "mlab",
+    "dataSource": "memory",
     "public": true
   }
 }
