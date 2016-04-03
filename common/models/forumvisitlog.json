@@ -1,0 +1,23 @@
+{
+  "name": "Forumvisitlog",
+  "plural": "forumvisitlogs",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "visitedOn": {
+      "type": "date"
+    }
+  },
+  "validations": [],
+  "relations": {
+    "gamer": {
+      "type": "belongsTo",
+      "model": "Gamer"
+    }
+  },
+  "acls": [],
+  "methods": {}
+}

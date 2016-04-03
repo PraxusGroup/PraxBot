@@ -20,6 +20,8 @@ module.exports = function(app) {
     Voiplog = app.models.Voiplog,
     Chatlog = app.models.Chatlog,
     Gamelog = app.models.Gamelog,
+    Forumvisitlog = app.models.Forumvisitlog,
+    Forumpostlog = app.models.Forumpostlog,
     Game = app.models.Game,
     botLogin = config.praxbot.login,
     botPassword = config.praxbot.password,
@@ -29,50 +31,6 @@ module.exports = function(app) {
   praxBot.login(botLogin, botPassword);
   console.log('Praxbot Connected');
 
-  function updateForumVariables() {
-    Gamer.find()
-      .then(function(allGamers) {
-        function updateGamer(i) {
-          if (i < allGamers.length) {
-            console.log("Forum Activity Update " + (i + 1) + "/" + allGamers.length + " - " + allGamers[i].userName);
-            var gamerURLTag = ((allGamers[i].forumAlias) ? allGamers[i].forumAlias.toLowerCase() : allGamers[i].userName.toLowerCase().replace(" ", "-")),
-              url = 'http://nodebb.praxusgroup.com/api/user/' + gamerURLTag;
-            request.get({
-              url: url,
-              json: true
-            }, function(e, r, b) {
-              var lastOnline = new Date(315532800000).toISOString(),
-                lastPost = new Date(315532800000).toISOString();
-              if (!e && r.statusCode === 200) {
-                lastOnline = new Date(b.lastonline).toISOString();
-                lastPost = new Date(b.lastposttime).toISOString();
-              }
-              allGamers[i].lastForumPost = lastPost;
-              allGamers[i].lastForumVisit = lastOnline;
-              allGamers[i].save()
-                .then(function(complete) {
-                  updateGamer(i + 1);
-                });
-            });
-          } else {
-            console.log("Forum activity update completed");
-          }
-        }
-        updateGamer(0);
-      })
-      .catch(console.log);
-  }
-
-  // Initiate the Cron that will get forum activity
-  // cronTime: '0 */1 * * * *' --> every 1 minutes
-  var forumCron = new CronJob({
-    cronTime: '0 */3 * * * *',
-    onTick: function() {
-      console.log("Updating forum activity statistics");
-      updateForumVariables();
-    },
-    start: true
-  });
 
   /* On a disconnect, usually due to DDOS attacks*/
   /* We will wait 5 seconds and log back in.*/
@@ -240,4 +198,71 @@ module.exports = function(app) {
         });
     }
   });
+
+  // Initiate the Cron that will get forum activity
+  // cronTime: '0 */15 * * * *' --> every 15 minutes
+  var forumCron = new CronJob({
+    cronTime: '0 */30 * * * *',
+    onTick: function() {
+      console.log("Updating forum activity statistics");
+      updateForumVariables();
+    },
+    start: true
+  });
+
+  function updateForumVariables() {
+    Gamer.find()
+      .then(function(allGamers) {
+        function updateGamer(i) {
+          if (i < allGamers.length) {
+            console.log("Forum Activity Update " + (i + 1) + "/" + allGamers.length + " - " + allGamers[i].userName);
+            var gamerURLTag = ((allGamers[i].forumAlias) ? allGamers[i].forumAlias.toLowerCase() : allGamers[i].userName.toLowerCase().replace(" ", "-")),
+              url = 'http://nodebb.praxusgroup.com/api/user/' + gamerURLTag;
+            request.get({
+              url: url,
+              json: true
+            }, function(e, r, b) {
+              var lastOnline = new Date(315532800000).toISOString(),
+                lastPost = new Date(315532800000).toISOString();
+              if (!e && r.statusCode === 200) {
+                lastOnline = new Date(b.lastonline).toISOString();
+                lastPost = new Date(b.lastposttime).toISOString();
+              }
+              allGamers[i].lastForumPost = lastPost;
+              allGamers[i].lastForumVisit = lastOnline;
+              allGamers[i].save()
+                .then(function(complete) {
+                  Forumvisitlog.findOrCreate({
+                      where: {
+                        visitedOn: lastOnline.substr(0, 10),
+                        gamerId: allGamers[i].id
+                      }
+                    }, {
+                      visitedOn: lastOnline.substr(0, 10),
+                      gamerId: allGamers[i].id
+                    })
+                    .then(function(morecomplete) {
+                      Forumpostlog.findOrCreate({
+                          where: {
+                            postedOn: lastPost.substr(0, 10),
+                            gamerId: allGamers[i].id
+                          }
+                        }, {
+                          postedOn: lastPost.substr(0, 10),
+                          gamerId: allGamers[i].id
+                        })
+                        .then(function(finalcomplete) {
+                          updateGamer(i + 1);
+                        });
+                    });
+                });
+            });
+          } else {
+            console.log("Forum activity update completed");
+          }
+        }
+        updateGamer(0);
+      })
+      .catch(console.log);
+  }
 };

@@ -59,12 +59,11 @@ exports.getPrimaryRole = function(rolesArray) {
 
 exports.getGameName = function(gameTitle) {
   var titleToSwitch = gameTitle.toLowerCase();
-  switch (titleToSwitch) {
-    case 'arma III':
-      return 'Arma 3';
-    default:
-      return gameTitle;
-  }
+  if (titleToSwitch === 'arma III') {
+    return 'Arma 3';
+  } else {
+    return gameTitle;
+  }  
 };
 
 exports.presenceGameConditional = function(userOld, userNew) {
