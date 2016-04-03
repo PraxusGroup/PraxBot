@@ -13,6 +13,8 @@ module.exports = function(app) {
   var discord = require('discord.js'),
     config = require('../praxbot_files/config.json'),
     b = require('../praxbot_files/functions.js'),
+    CronJob = require('cron').CronJob,
+    request = require('request'),
     praxBot = new discord.Client(),
     Gamer = app.models.Gamer,
     Voiplog = app.models.Voiplog,
@@ -26,6 +28,52 @@ module.exports = function(app) {
 
   praxBot.login(botLogin, botPassword);
   console.log('Praxbot Connected');
+
+  function updateForumVariables() {
+    Gamer.find()
+      .then(function(allGamers) {
+        function updateGamer(i) {
+          if (i < allGamers.length) {
+            var gamerURLTag = allGamers[i].userName.toLowerCase(),
+              url = 'http://nodebb.praxusgroup.com/api/user/' + gamerURLTag;
+            console.log(url);
+            request.get({
+              url: url,
+              json: true
+            }, function(e, r, b) {
+              var lastOnline = new Date(315532800000).toISOString(),
+                lastPost = new Date(315532800000).toISOString();
+              if (!e && r.statusCode === 200) {
+                if (b.title === allGamers[i].userName) {
+                  lastOnline = new Date(b.lastonline).toISOString();
+                  lastPost = new Date(b.lastposttime).toISOString();
+                }
+              }
+              allGamers[i].lastForumPost = lastPost;
+              allGamers[i].lastForumVisit = lastOnline;
+              allGamers[i].save()
+                .then(function(complete) {
+                  console.log(complete);
+                  updateGamer(i + 1);
+                });
+            });
+          }
+        }
+        updateGamer(0);
+      })
+      .catch(console.log);
+  }
+
+  // Initiate the Cron that will get forum activity
+  // cronTime: '0 */1 * * * *' --> every 1 minutes
+  var forumCron = new CronJob({
+    cronTime: '0 */1 * * * *',
+    onTick: function() {
+      console.log("ForumCron: Starting");
+      updateForumVariables();
+    },
+    start: true
+  });
 
   /* On a disconnect, usually due to DDOS attacks*/
   /* We will wait 5 seconds and log back in.*/
@@ -58,7 +106,6 @@ module.exports = function(app) {
       praxBot.sendMessage(message, b.randomQuote(message.content));
     }
     if (content === 'starwarsquote') {
-
       praxBot.sendMessage(message, b.randomQuote(message.content));
     }
     /* To do a quick test if the bot is really running and catching events*/
@@ -103,7 +150,9 @@ module.exports = function(app) {
           gamerId: curGamer.id
         });
       })
-      .catch(console.log);
+      .catch(function(err) {
+        console.log(err);
+      });
   });
 
   // When a Praxian joins a voice channel
@@ -141,13 +190,15 @@ module.exports = function(app) {
             gamerId: curGamer.id
           });
         })
-        .catch(console.log);
+        .catch(function(err) {
+          console.log(err);
+        });
     }
   });
 
   // When a Praxian starts a game
   praxBot.on('presence', function(userOld, userNew) {
-    if ((userOld.status === userNew.status) && ((userNew.game && !userOld.game) || (userNew.game && userOld.game))) {
+    if (b.presenceGameConditional(userOld, userNew)) {
       var today = new Date();
       var curDate = b.parseDate(today);
       var gameName = b.getGameName(userNew.game.name);
@@ -185,7 +236,9 @@ module.exports = function(app) {
               });
             });
         })
-        .catch(console.log);
+        .catch(function(err) {
+          console.log(err);
+        });
     }
   });
 };
