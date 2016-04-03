@@ -52,14 +52,17 @@ exports.getPrimaryRole = function(rolesArray) {
 };
 
 exports.getGameName = function(gameTitle) {
-  var returnTitle = gameTitle;
   var titleToSwitch = gameTitle.toLowerCase();
   switch (titleToSwitch) {
     case 'arma III':
-      returnTitle = 'Arma 3';
-      break;
+      return 'Arma 3';
     default:
-      break;
+      return gameTitle;
   }
-  return returnTitle;
+};
+
+exports.presenceGameConditional = function(userOld, userNew) {
+  return (userOld.status === userNew.status) &&
+    ((userNew.game && !userOld.game) ||
+      (userNew.game && userOld.game));
 };
