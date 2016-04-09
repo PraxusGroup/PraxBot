@@ -28,241 +28,348 @@ module.exports = function(app) {
     generalChannelId = config.praxbot.generalChatChannelId,
     serverId = config.praxbot.id;
 
-  praxBot.login(botLogin, botPassword);
-  console.log('Praxbot Connected');
+  loadPraxbot();
 
+  function loadPraxbot() {
+    praxBot.login(botLogin, botPassword)
+      .then(function(loadedBot) {
+        console.log('Praxbot Connected');
 
-  /* On a disconnect, usually due to DDOS attacks*/
-  /* We will wait 5 seconds and log back in.*/
-  praxBot.on('disconnected', function() {
-    console.log('Praxbot Disconnected... attempting to reconnect.');
-    setTimeout(function() {
-      praxBot.login(botLogin, botPassword);
-      console.log('Praxbot Connected');
-    }, 5000);
-  });
-
-
-  /* On a new user joining the server for the first time*/
-  praxBot.on('serverNewMember', function(server, newDude) {
-    /* 129037173486911488 is the id for the "general" textChannel */
-    praxBot.sendMessage(generalChannelId, newDude.username +
-      ' is new on the Praxus Discord. Welcome ' +
-      newDude.username + '. Feel free to introduce yourself!');
-  });
-
-
-  /* On written message commands */
-  praxBot.on('message', function(message) {
-
-    var content = message.content.toLowerCase();
-    var author = message.author.username;
-
-    /* Praxus Quotes */
-    if (content === 'praxusquote') {
-      praxBot.sendMessage(message, b.randomQuote(message.content));
-    }
-    if (content === 'starwarsquote') {
-      praxBot.sendMessage(message, b.randomQuote(message.content));
-    }
-    /* To do a quick test if the bot is really running and catching events*/
-    if (content === 'testbot') {
-      praxBot.sendMessage(message, "I'm still running, " + author);
-    }
-    // In case I forget how the message object is structured.
-    if (content === 'botlog') {
-      console.log(message);
-    }
-    // A little extra bot support for a powerful Drevan move.
-    if (content === 'get dunked' &&
-      author === 'Drevan') {
-      praxBot.sendMessage(message, 'Oh snap!');
-    }
-
-    var today = new Date();
-    var curDate = b.parseDate(today);
-
-    /* We're going to add a log of the user posting */
-    /* a chat message once per day, per user */
-    Gamer.findOrCreate({
-        where: {
-          userName: author
-        }
-      }, {
-        userName: author
-      })
-      .then(function(res) {
-        var curGamer = res[0];
-        curGamer.lastDiscordChatMessage = curDate.dateISO;
-        return curGamer.save();
-      })
-      .then(function(curGamer) {
-        Chatlog.findOrCreate({
-          where: {
-            chatOn: curDate.dbDate,
-            gamerId: curGamer.id
-          }
-        }, {
-          chatOn: curDate.dbDate,
-          gamerId: curGamer.id
+        /* On a disconnect, usually due to DDOS attacks*/
+        /* We will wait 5 seconds and log back in.*/
+        praxBot.on('disconnected', function() {
+          console.log('Praxbot Disconnected... attempting to reconnect.');
+          setTimeout(function() {
+            loadPraxbot();
+          }, 5000);
         });
-      })
-      .catch(function(err) {
-        console.log(err);
-      });
-  });
 
-  // When a Praxian joins a voice channel
-  praxBot.on('voiceJoin', function(channel, user) {
-    console.log(user.username + ' joined channel: ' + user.voiceChannel.name);
-    if (user.voiceChannel.name !== 'AFK') {
-
-      var today = new Date();
-      var curDate = b.parseDate(today); // "2011-01-23"
-
-      var praxusServer = praxBot.servers.get("id", serverId);
-      var primaryRole = b.getPrimaryRole(praxusServer.rolesOfUser(user));
-
-      Gamer.findOrCreate({
-          where: {
-            userName: user.username
-          }
-        }, {
-          userName: user.username
-        })
-        .then(function(res) {
-          var curGamer = res[0];
-          curGamer.lastDiscordVoiceConnect = curDate.dateISO;
-          curGamer.role = primaryRole;
-          return curGamer.save();
-        })
-        .then(function(curGamer) {
-          Voiplog.findOrCreate({
-            where: {
-              connectedOn: curDate.dbDate,
-              gamerId: curGamer.id
-            }
-          }, {
-            connectedOn: curDate.dbDate,
-            gamerId: curGamer.id
-          });
-        })
-        .catch(function(err) {
-          console.log(err);
+        /* On a new user joining the server for the first time*/
+        praxBot.on('serverNewMember', function(server, newDude) {
+          /* 129037173486911488 is the id for the "general" textChannel */
+          praxBot.sendMessage(generalChannelId, newDude.username +
+            ' is new on the Praxus Discord. Welcome ' +
+            newDude.username + '. Feel free to introduce yourself!');
         });
-    }
-  });
 
-  // When a Praxian starts a game
-  praxBot.on('presence', function(userOld, userNew) {
-    if (b.presenceGameConditional(userOld, userNew)) {
-      var today = new Date();
-      var curDate = b.parseDate(today);
-      var gameName = b.getGameName(userNew.game.name);
+        /* On written message commands */
+        praxBot.on('message', function(message) {
 
-      console.log(userNew.username + ' started playing ' + gameName);
+          var content = message.content.toLowerCase();
+          var author = message.author.username;
 
-      Gamer.findOrCreate({
-          where: {
-            userName: userNew.username
+          /* Praxus Quotes */
+          if (content === 'praxusquote') {
+            praxBot.sendMessage(message, b.randomQuote(message.content));
           }
-        }, {
-          userName: userNew.username
-        })
-        .then(function(user) {
-          Game.findOrCreate({
+          if (content === 'starwarsquote') {
+            praxBot.sendMessage(message, b.randomQuote(message.content));
+          }
+          /* To do a quick test if the bot is really running and catching events*/
+          if (content === 'testbot') {
+            praxBot.sendMessage(message, "I'm still running, " + author);
+          }
+          // In case I forget how the message object is structured.
+          if (content === 'botlog') {
+            console.log(praxBot.servers[0].members);
+            //console.log(message);
+          }
+          // Build all the Discord members in the database
+          if (content === 'getallmembers()' &&
+            author === 'Whiplash') {
+            getAllMembers();
+          }
+          // Make sure every member record has its properties
+          if (content === 'initmemberproperties()' &&
+            author === 'Whiplash') {
+            initMemberProperties();
+          }
+          // A little extra bot support for a powerful Drevan move.
+          if (content === 'get dunked' &&
+            author === 'Drevan') {
+            praxBot.sendMessage(message, 'Oh snap!');
+          }
+
+          var today = new Date();
+          var curDate = b.parseDate(today);
+          var zeroDate = new Date(0).toISOString();
+
+
+          /* We're going to add a log of the user posting */
+          /* a chat message once per day, per user */
+          Gamer.findOrCreate({
               where: {
-                title: gameName
+                userName: author
               }
             }, {
-              title: gameName
+              userName: author,
+              lastForumPost: zeroDate,
+              lastForumVisit: zeroDate,
+              lastDiscordChatMessage: zeroDate,
+              lastDiscordVoiceConnect: zeroDate,
+              role: '@Guest'
             })
-            .then(function(game) {
-              var curGamer = user[0],
-                curGame = game[0];
-              Gamelog.findOrCreate({
+            .then(function(res) {
+              var curGamer = res[0];
+              curGamer.lastDiscordVoiceConnect = (curGamer.lastDiscordVoiceConnect) ? curGamer.lastDiscordVoiceConnect : zeroDate;
+              curGamer.lastForumPost = (curGamer.lastForumPost) ? curGamer.lastForumPost : zeroDate;
+              curGamer.lastForumVisit = (curGamer.lastForumVisit) ? curGamer.lastForumVisit : zeroDate;
+              curGamer.role = (curGamer.role) ? curGamer.role : '@Guest';
+              curGamer.lastDiscordChatMessage = curDate.dateISO;
+              return curGamer.save();
+            })
+            .then(function(curGamer) {
+              Chatlog.findOrCreate({
                 where: {
-                  gamerId: curGamer.id,
-                  playedOn: curDate.dbDate,
-                  gameId: curGame.id
+                  chatOn: curDate.dbDate,
+                  gamerId: curGamer.id
                 }
               }, {
-                gamerId: curGamer.id,
-                playedOn: curDate.dbDate,
-                gameId: curGame.id
+                chatOn: curDate.dbDate,
+                gamerId: curGamer.id
               });
+            })
+            .catch(function(err) {
+              console.log(err);
             });
-        })
-        .catch(function(err) {
-          console.log(err);
         });
-    }
-  });
 
-  // Initiate the Cron that will get forum activity
-  // cronTime: '0 */15 * * * *' --> every 15 minutes
-  var forumCron = new CronJob({
-    cronTime: '0 */30 * * * *',
-    onTick: function() {
-      console.log("Updating forum activity statistics");
-      updateForumVariables();
-    },
-    start: true
-  });
+        // When a Praxian joins a voice channel
+        praxBot.on('voiceJoin', function(channel, user) {
+          console.log(user.username + ' joined channel: ' + user.voiceChannel.name);
+          if (user.voiceChannel.name !== 'AFK') {
 
-  function updateForumVariables() {
-    Gamer.find()
-      .then(function(allGamers) {
-        function updateGamer(i) {
-          if (i < allGamers.length) {
-            console.log("Forum Activity Update " + (i + 1) + "/" + allGamers.length + " - " + allGamers[i].userName);
-            var gamerURLTag = ((allGamers[i].forumAlias) ? allGamers[i].forumAlias.toLowerCase() : allGamers[i].userName.toLowerCase().replace(" ", "-")),
-              url = 'http://nodebb.praxusgroup.com/api/user/' + gamerURLTag;
-            request.get({
-              url: url,
-              json: true
-            }, function(e, r, b) {
-              var lastOnline = new Date(315532800000).toISOString(),
-                lastPost = new Date(315532800000).toISOString();
-              if (!e && r.statusCode === 200) {
-                lastOnline = new Date(b.lastonline).toISOString();
-                lastPost = new Date(b.lastposttime).toISOString();
-              }
-              allGamers[i].lastForumPost = lastPost;
-              allGamers[i].lastForumVisit = lastOnline;
-              allGamers[i].save()
-                .then(function(complete) {
-                  Forumvisitlog.findOrCreate({
+            var today = new Date();
+            var curDate = b.parseDate(today); // "2011-01-23"
+            var zeroDate = new Date(0).toISOString();
+
+            var praxusServer = praxBot.servers.get("id", serverId);
+            var primaryRole = b.getPrimaryRole(praxusServer.rolesOfUser(user));
+
+            Gamer.findOrCreate({
+                where: {
+                  userName: user.username
+                }
+              }, {
+                userName: user.username,
+                lastForumPost: zeroDate,
+                lastForumVisit: zeroDate,
+                lastDiscordChatMessage: zeroDate,
+                lastDiscordVoiceConnect: zeroDate,
+                role: '@Guest'
+              })
+              .then(function(res) {
+                var curGamer = res[0];
+                curGamer.lastForumPost = (curGamer.lastForumPost) ? curGamer.lastForumPost : zeroDate;
+                curGamer.lastForumVisit = (curGamer.lastForumVisit) ? curGamer.lastForumVisit : zeroDate;
+                curGamer.lastDiscordChatMessage = (curGamer.lastDiscordChatMessage) ? curGamer.lastDiscordChatMessage : zeroDate;
+                curGamer.lastDiscordVoiceConnect = curDate.dateISO;
+                curGamer.role = primaryRole;
+                return curGamer.save();
+              })
+              .then(function(curGamer) {
+                Voiplog.findOrCreate({
+                  where: {
+                    connectedOn: curDate.dbDate,
+                    gamerId: curGamer.id
+                  }
+                }, {
+                  connectedOn: curDate.dbDate,
+                  gamerId: curGamer.id
+                });
+              })
+              .catch(function(err) {
+                console.log(err);
+              });
+          }
+        });
+
+        // When a Praxian starts a game
+        praxBot.on('presence', function(userOld, userNew) {
+          if (b.presenceGameConditional(userOld, userNew)) {
+            var today = new Date();
+            var curDate = b.parseDate(today);
+            var gameName = b.getGameName(userNew.game.name);
+            var zeroDate = new Date(0).toISOString();
+
+            console.log(userNew.username + ' started playing ' + gameName);
+
+            Gamer.findOrCreate({
+                where: {
+                  userName: userNew.username
+                }
+              }, {
+                userName: userNew.username,
+                lastForumPost: zeroDate,
+                lastForumVisit: zeroDate,
+                lastDiscordChatMessage: zeroDate,
+                lastDiscordVoiceConnect: zeroDate,
+                role: '@Guest'
+              })
+              .then(function(user) {
+
+                Game.findOrCreate({
+                    where: {
+                      title: gameName
+                    }
+                  }, {
+                    title: gameName
+                  })
+                  .then(function(game) {
+                    var curGamer = user[0],
+                      curGame = game[0];
+                    Gamelog.findOrCreate({
                       where: {
-                        visitedOn: lastOnline.substr(0, 10),
-                        gamerId: allGamers[i].id
+                        gamerId: curGamer.id,
+                        playedOn: curDate.dbDate,
+                        gameId: curGame.id
                       }
                     }, {
-                      visitedOn: lastOnline.substr(0, 10),
-                      gamerId: allGamers[i].id
-                    })
-                    .then(function(morecomplete) {
-                      Forumpostlog.findOrCreate({
-                          where: {
-                            postedOn: lastPost.substr(0, 10),
-                            gamerId: allGamers[i].id
-                          }
-                        }, {
-                          postedOn: lastPost.substr(0, 10),
-                          gamerId: allGamers[i].id
-                        })
-                        .then(function(finalcomplete) {
-                          updateGamer(i + 1);
-                        });
+                      gamerId: curGamer.id,
+                      playedOn: curDate.dbDate,
+                      gameId: curGame.id
                     });
-                });
-            });
-          } else {
-            console.log("Forum activity update completed");
+                  });
+              })
+              .catch(function(err) {
+                console.log(err);
+              });
           }
+        });
+
+        // Initiate the Cron that will get forum activity
+        // cronTime: '0 */15 * * * *' --> every 15 minutes
+        var forumCron = new CronJob({
+          cronTime: '0 */30 * * * *',
+          onTick: function() {
+            console.log("Updating forum activity statistics");
+            updateForumVariables();
+          },
+          start: true
+        });
+
+        function updateForumVariables() {
+          Gamer.find()
+            .then(function(allGamers) {
+              function updateGamer(i) {
+                if (i < allGamers.length) {
+                  console.log("Forum Activity Update " + (i + 1) + "/" + allGamers.length + " - " + allGamers[i].userName);
+                  var gamerURLTag = ((allGamers[i].forumAlias) ? allGamers[i].forumAlias.toLowerCase() : allGamers[i].userName.toLowerCase().replace(" ", "-")),
+                    url = 'http://nodebb.praxusgroup.com/api/user/' + gamerURLTag;
+                  request.get({
+                    url: url,
+                    json: true
+                  }, function(e, r, b) {
+                    var lastOnline = new Date(0).toISOString(),
+                      lastPost = new Date(0).toISOString();
+                    if (!e && r.statusCode === 200) {
+                      lastOnline = new Date(b.lastonline).toISOString();
+                      lastPost = new Date(b.lastposttime).toISOString();
+                    }
+                    allGamers[i].lastForumPost = lastPost;
+                    allGamers[i].lastForumVisit = lastOnline;
+                    allGamers[i].save()
+                      .then(function(complete) {
+                        Forumvisitlog.findOrCreate({
+                            where: {
+                              visitedOn: lastOnline.substr(0, 10),
+                              gamerId: allGamers[i].id
+                            }
+                          }, {
+                            visitedOn: lastOnline.substr(0, 10),
+                            gamerId: allGamers[i].id
+                          })
+                          .then(function(morecomplete) {
+                            Forumpostlog.findOrCreate({
+                                where: {
+                                  postedOn: lastPost.substr(0, 10),
+                                  gamerId: allGamers[i].id
+                                }
+                              }, {
+                                postedOn: lastPost.substr(0, 10),
+                                gamerId: allGamers[i].id
+                              })
+                              .then(function(finalcomplete) {
+                                updateGamer(i + 1);
+                              });
+                          });
+                      });
+                  });
+                } else {
+                  console.log("Forum activity update completed");
+                }
+              }
+              updateGamer(0);
+            })
+            .catch(console.log);
         }
-        updateGamer(0);
-      })
-      .catch(console.log);
+
+        function getAllMembers() {
+          console.log("Starting");
+          var allMembers = praxBot.servers[0].members;
+          var i = 0;
+          var zeroDate = new Date(0).toISOString();
+
+          function updateGamer(i) {
+            if (i < allMembers.length) {
+              console.log("Forum Activity Update " + (i + 1) + "/" + allMembers.length + " - " + allMembers[i].username);
+              Gamer.findOrCreate({
+                  where: {
+                    userName: allMembers[i].username
+                  }
+                }, {
+                  userName: allMembers[i].username,
+                  lastForumPost: zeroDate,
+                  lastForumVisit: zeroDate,
+                  lastDiscordChatMessage: zeroDate,
+                  lastDiscordVoiceConnect: zeroDate,
+                  role: '@Guest'
+                })
+                .then(function(completed) {
+                  updateGamer(i + 1);
+                });
+            }
+          }
+          updateGamer(0);
+        }
+
+        function initMemberProperties() {
+          console.log("Starting");
+          var allMembers = praxBot.servers[0].members;
+          var i = 0;
+          var zeroDate = new Date(0).toISOString();
+
+          Gamer.find()
+            .then(function(allGamers) {
+              function updateGamer(i) {
+                if (i < allGamers.length) {
+                  console.log("Updating Properties " + (i + 1) + "/" + allMembers.length + " - " + allGamers[i].username);
+                  var curGamer = allGamers[i];
+                  if (curGamer.lastForumPost) {
+                    if (curGamer.lastForumPost === '1980-01-01T00:00:00.000Z') {
+                      curGamer.lastForumPost = zeroDate;
+                    }
+                  }
+                  if (curGamer.lastForumVisit) {
+                    if (curGamer.lastForumVisit === '1980-01-01T00:00:00.000Z') {
+                      curGamer.lastForumVisit = zeroDate;
+                    }
+                  }
+                  curGamer.lastForumPost = (curGamer.lastForumPost) ? curGamer.lastForumPost : zeroDate;
+                  curGamer.lastForumVisit = (curGamer.lastForumVisit) ? curGamer.lastForumVisit : zeroDate;
+                  curGamer.lastDiscordChatMessage = (curGamer.lastDiscordChatMessage) ? curGamer.lastDiscordChatMessage : zeroDate;
+                  curGamer.lastDiscordVoiceConnect = (curGamer.lastDiscordVoiceConnect) ? curGamer.lastDiscordVoiceConnect : zeroDate;
+                  curGamer.role = (curGamer.role) ? curGamer.role : '@Guest';
+                  curGamer.save()
+                    .then(function(completed) {
+                      console.log("Updating Properties " + (i + 1) + "/" + allMembers.length + " - " + allGamers[i].username + ' - done');
+                      updateGamer(i + 1);
+                    });
+                }
+              }
+              updateGamer(0);
+            });
+        }
+      });
   }
 };
