@@ -14,31 +14,31 @@
     ]
   },
   "Gamer": {
-    "dataSource": "mlab",
+    "dataSource": "memory",
     "public": true
   },
   "Game": {
-    "dataSource": "mlab",
+    "dataSource": "memory",
     "public": true
   },
   "Voiplog": {
-    "dataSource": "mlab",
+    "dataSource": "memory",
     "public": true
   },
   "Gamelog": {
-    "dataSource": "mlab",
+    "dataSource": "memory",
     "public": true
   },
   "Chatlog": {
-    "dataSource": "mlab",
+    "dataSource": "memory",
     "public": true
   },
   "Forumvisitlog": {
-    "dataSource": "mlab",
+    "dataSource": "memory",
     "public": true
   },
   "Forumpostlog": {
-    "dataSource": "mlab",
+    "dataSource": "memory",
     "public": true
   }
 }
