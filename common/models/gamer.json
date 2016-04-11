@@ -10,10 +10,16 @@
     "userName": {
       "type": "string"
     },
+    "discordUserId": {
+      "type": "string"
+    },
     "role": {
       "type": "string"
     },
     "lastDiscordChatMessage": {
+      "type": "string"
+    },
+    "activeDiscordAccount": {
       "type": "string"
     },
     "lastDiscordVoiceConnect": {

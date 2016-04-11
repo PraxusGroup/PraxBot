@@ -50,6 +50,36 @@ module.exports = function(app) {
           praxBot.sendMessage(generalChannelId, newDude.username +
             ' is new on the Praxus Discord. Welcome ' +
             newDude.username + '. Feel free to introduce yourself!');
+
+          var praxusServer = praxBot.servers.get("id", serverId);
+          var primaryRole = b.getPrimaryRole(praxusServer.rolesOfUser(newDude));
+          var zeroDate = new Date(0).toISOString();
+
+          Gamer.findOrCreate({
+              where: {
+                userName: newDude.username
+              }
+            }, {
+              userName: newDude.username,
+              discordUserId: newDude.id,
+              lastForumPost: zeroDate,
+              lastForumVisit: zeroDate,
+              lastDiscordChatMessage: zeroDate,
+              lastDiscordVoiceConnect: zeroDate,
+              activeDiscordAccount: "true",
+              role: primaryRole
+            })
+            .then(function(res) {
+              var curGamer = res[0];
+              curGamer.lastForumPost = (curGamer.lastForumPost) ? curGamer.lastForumPost : zeroDate;
+              curGamer.lastForumVisit = (curGamer.lastForumVisit) ? curGamer.lastForumVisit : zeroDate;
+              curGamer.lastDiscordChatMessage = (curGamer.lastDiscordChatMessage) ? curGamer.lastDiscordChatMessage : zeroDate;
+              curGamer.lastDiscordVoiceConnect = (curGamer.lastDiscordVoiceConnect) ? curGamer.lastDiscordVoiceConnect : zeroDate;
+              curGamer.activeDiscordAccount = "true";
+              curGamer.role = primaryRole;
+              return curGamer.save();
+            });
+
         });
 
         /* On written message commands */
@@ -107,6 +137,7 @@ module.exports = function(app) {
               lastForumVisit: zeroDate,
               lastDiscordChatMessage: zeroDate,
               lastDiscordVoiceConnect: zeroDate,
+              activeDiscordAccount: "true",
               role: '@Guest'
             })
             .then(function(res) {
@@ -115,6 +146,7 @@ module.exports = function(app) {
               curGamer.lastForumPost = (curGamer.lastForumPost) ? curGamer.lastForumPost : zeroDate;
               curGamer.lastForumVisit = (curGamer.lastForumVisit) ? curGamer.lastForumVisit : zeroDate;
               curGamer.role = (curGamer.role) ? curGamer.role : '@Guest';
+              curGamer.activeDiscordAccount= "true";
               curGamer.lastDiscordChatMessage = curDate.dateISO;
               return curGamer.save();
             })
@@ -131,6 +163,84 @@ module.exports = function(app) {
             })
             .catch(function(err) {
               console.log(err);
+            });
+        });
+
+        // Fires when we update a member's roles
+        // We gotta make sure its reflected in the DB
+        praxBot.on('serverMemberUpdated', function(server, user) {
+          var today = new Date();
+          var curDate = b.parseDate(today); // "2011-01-23"
+          var zeroDate = new Date(0).toISOString();
+
+          var praxusServer = praxBot.servers.get("id", serverId);
+          var primaryRole = b.getPrimaryRole(praxusServer.rolesOfUser(user));
+
+          Gamer.findOrCreate({
+              where: {
+                userName: user.username
+              }
+            }, {
+              userName: user.username,
+              discordUserId: user.id,
+              lastForumPost: zeroDate,
+              lastForumVisit: zeroDate,
+              lastDiscordChatMessage: zeroDate,
+              lastDiscordVoiceConnect: zeroDate,
+              activeDiscordAccount: "true",
+              role: primaryRole
+            })
+            .then(function(res) {
+              var curGamer = res[0];
+              curGamer.lastForumPost = (curGamer.lastForumPost) ? curGamer.lastForumPost : zeroDate;
+              curGamer.lastForumVisit = (curGamer.lastForumVisit) ? curGamer.lastForumVisit : zeroDate;
+              curGamer.lastDiscordChatMessage = (curGamer.lastDiscordChatMessage) ? curGamer.lastDiscordChatMessage : zeroDate;
+              curGamer.lastDiscordVoiceConnect = (curGamer.lastDiscordVoiceConnect) ? curGamer.lastDiscordVoiceConnect : zeroDate;
+              curGamer.activeDiscordAccount= "true";
+              curGamer.role = primaryRole;
+              return curGamer.save();
+            })
+            .then(function(done) {
+              console.log(user.username + ' updated');
+            });
+        });
+
+        // Fires when we remove a member from the server
+        // We gotta make sure its reflected in the DB
+        praxBot.on('serverMemberRemoved', function(server, user) {
+          var today = new Date();
+          var curDate = b.parseDate(today); // "2011-01-23"
+          var zeroDate = new Date(0).toISOString(); // "GMT"
+
+          var praxusServer = praxBot.servers.get("id", serverId);
+          var primaryRole = b.getPrimaryRole(praxusServer.rolesOfUser(user));
+
+          Gamer.findOrCreate({
+              where: {
+                userName: user.username
+              }
+            }, {
+              userName: user.username,
+              discordUserId: user.id,
+              lastForumPost: zeroDate,
+              lastForumVisit: zeroDate,
+              lastDiscordChatMessage: zeroDate,
+              lastDiscordVoiceConnect: zeroDate,
+              activeDiscordAccount: "false",
+              role: primaryRole
+            })
+            .then(function(res) {
+              var curGamer = res[0];
+              curGamer.lastForumPost = (curGamer.lastForumPost) ? curGamer.lastForumPost : zeroDate;
+              curGamer.lastForumVisit = (curGamer.lastForumVisit) ? curGamer.lastForumVisit : zeroDate;
+              curGamer.lastDiscordChatMessage = (curGamer.lastDiscordChatMessage) ? curGamer.lastDiscordChatMessage : zeroDate;
+              curGamer.lastDiscordVoiceConnect = (curGamer.lastDiscordVoiceConnect) ? curGamer.lastDiscordVoiceConnect : zeroDate;
+              curGamer.activeDiscordAccount = "false";
+              curGamer.role = primaryRole;
+              return curGamer.save();
+            })
+            .then(function(done) {
+              console.log(user.username + ' deactivated');
             });
         });
 
@@ -152,17 +262,20 @@ module.exports = function(app) {
                 }
               }, {
                 userName: user.username,
+                discordUserId: user.id,
                 lastForumPost: zeroDate,
                 lastForumVisit: zeroDate,
                 lastDiscordChatMessage: zeroDate,
                 lastDiscordVoiceConnect: zeroDate,
-                role: '@Guest'
+                activeDiscordAccount: "true",
+                role: primaryRole
               })
               .then(function(res) {
                 var curGamer = res[0];
                 curGamer.lastForumPost = (curGamer.lastForumPost) ? curGamer.lastForumPost : zeroDate;
                 curGamer.lastForumVisit = (curGamer.lastForumVisit) ? curGamer.lastForumVisit : zeroDate;
                 curGamer.lastDiscordChatMessage = (curGamer.lastDiscordChatMessage) ? curGamer.lastDiscordChatMessage : zeroDate;
+                curGamer.activeDiscordAccount = "true";
                 curGamer.lastDiscordVoiceConnect = curDate.dateISO;
                 curGamer.role = primaryRole;
                 return curGamer.save();
@@ -200,10 +313,12 @@ module.exports = function(app) {
                 }
               }, {
                 userName: userNew.username,
+                discordUserId: userNew.id,
                 lastForumPost: zeroDate,
                 lastForumVisit: zeroDate,
                 lastDiscordChatMessage: zeroDate,
                 lastDiscordVoiceConnect: zeroDate,
+                activeDiscordAccount: "true",
                 role: '@Guest'
               })
               .then(function(user) {
@@ -319,13 +434,20 @@ module.exports = function(app) {
                   }
                 }, {
                   userName: allMembers[i].username,
+                  discordUserId: allMembers[i].id,
                   lastForumPost: zeroDate,
                   lastForumVisit: zeroDate,
                   lastDiscordChatMessage: zeroDate,
                   lastDiscordVoiceConnect: zeroDate,
+                  activeDiscordAccount: "true",
                   role: '@Guest'
                 })
-                .then(function(completed) {
+                .then(function(res) {
+                  var curGamer = res[0];
+                  curGamer.discordUserId = allMembers[i].id;
+                  return curGamer.save();
+                })
+                .then(function(complete) {
                   updateGamer(i + 1);
                 });
             }
@@ -335,7 +457,6 @@ module.exports = function(app) {
 
         function initMemberProperties() {
           console.log("Starting");
-          var allMembers = praxBot.servers[0].members;
           var i = 0;
           var zeroDate = new Date(0).toISOString();
 
@@ -343,7 +464,7 @@ module.exports = function(app) {
             .then(function(allGamers) {
               function updateGamer(i) {
                 if (i < allGamers.length) {
-                  console.log("Updating Properties " + (i + 1) + "/" + allMembers.length + " - " + allGamers[i].username);
+                  console.log("Updating Properties " + (i + 1) + "/" + allGamers.length + " - " + allGamers[i].username);
                   var curGamer = allGamers[i];
                   if (curGamer.lastForumPost) {
                     if (curGamer.lastForumPost === '1980-01-01T00:00:00.000Z') {
@@ -359,10 +480,12 @@ module.exports = function(app) {
                   curGamer.lastForumVisit = (curGamer.lastForumVisit) ? curGamer.lastForumVisit : zeroDate;
                   curGamer.lastDiscordChatMessage = (curGamer.lastDiscordChatMessage) ? curGamer.lastDiscordChatMessage : zeroDate;
                   curGamer.lastDiscordVoiceConnect = (curGamer.lastDiscordVoiceConnect) ? curGamer.lastDiscordVoiceConnect : zeroDate;
+                  curGamer.activeDiscordAccount = (curGamer.activeDiscordAccount) ? curGamer.activeDiscordAccount : "true";
                   curGamer.role = (curGamer.role) ? curGamer.role : '@Guest';
+                  curGamer.activeDiscordAccount = "true";
                   curGamer.save()
                     .then(function(completed) {
-                      console.log("Updating Properties " + (i + 1) + "/" + allMembers.length + " - " + allGamers[i].username + ' - done');
+                      console.log("Updating Properties " + (i + 1) + "/" + allGamers.length + " - " + allGamers[i].username + ' - done');
                       updateGamer(i + 1);
                     });
                 }
