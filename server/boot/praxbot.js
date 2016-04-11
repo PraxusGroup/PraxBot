@@ -456,10 +456,13 @@ module.exports = function(app) {
           var allMembers = praxBot.servers[0].members;
           var i = 0;
           var zeroDate = new Date(0).toISOString();
+          var praxusServer = praxBot.servers.get("id", serverId);
+          var primaryRole = "";
 
           function updateGamer(i) {
             if (i < allMembers.length) {
-              console.log("Forum Activity Update " + (i + 1) + "/" + allMembers.length + " - " + allMembers[i].username);
+              primaryRole = b.getPrimaryRole(praxusServer.rolesOfUser(allMembers[i]));
+              console.log("Forum Activity Update " + (i + 1) + "/" + allMembers.length + " - " + allMembers[i].username + " " + primaryRole);
               Gamer.findOrCreate({
                   where: {
                     userName: allMembers[i].username
@@ -472,11 +475,12 @@ module.exports = function(app) {
                   lastDiscordChatMessage: zeroDate,
                   lastDiscordVoiceConnect: zeroDate,
                   activeDiscordAccount: "true",
-                  role: '@Guest'
+                  role: primaryRole
                 })
                 .then(function(res) {
                   var curGamer = res[0];
                   curGamer.discordUserId = allMembers[i].id;
+                  curGamer.role = primaryRole;
                   return curGamer.save();
                 })
                 .then(function(complete) {
