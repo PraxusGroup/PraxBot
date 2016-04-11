@@ -63,11 +63,15 @@ exports.getGameName = function(gameTitle) {
     return 'Arma 3';
   } else {
     return gameTitle;
-  }  
+  }
 };
 
 exports.presenceGameConditional = function(userOld, userNew) {
   return (userOld.status === userNew.status) &&
     ((userNew.game && !userOld.game) ||
       (userNew.game && userOld.game));
+};
+
+exports.presenceUsernameChangeConditional = function(userOld, userNew) {
+  return (userOld.username !== userNew.username);
 };

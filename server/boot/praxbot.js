@@ -146,7 +146,7 @@ module.exports = function(app) {
               curGamer.lastForumPost = (curGamer.lastForumPost) ? curGamer.lastForumPost : zeroDate;
               curGamer.lastForumVisit = (curGamer.lastForumVisit) ? curGamer.lastForumVisit : zeroDate;
               curGamer.role = (curGamer.role) ? curGamer.role : '@Guest';
-              curGamer.activeDiscordAccount= "true";
+              curGamer.activeDiscordAccount = "true";
               curGamer.lastDiscordChatMessage = curDate.dateISO;
               return curGamer.save();
             })
@@ -196,7 +196,7 @@ module.exports = function(app) {
               curGamer.lastForumVisit = (curGamer.lastForumVisit) ? curGamer.lastForumVisit : zeroDate;
               curGamer.lastDiscordChatMessage = (curGamer.lastDiscordChatMessage) ? curGamer.lastDiscordChatMessage : zeroDate;
               curGamer.lastDiscordVoiceConnect = (curGamer.lastDiscordVoiceConnect) ? curGamer.lastDiscordVoiceConnect : zeroDate;
-              curGamer.activeDiscordAccount= "true";
+              curGamer.activeDiscordAccount = "true";
               curGamer.role = primaryRole;
               return curGamer.save();
             })
@@ -297,9 +297,11 @@ module.exports = function(app) {
           }
         });
 
-        // When a Praxian starts a game
+        // When a Praxian starts a game or changes their username
         praxBot.on('presence', function(userOld, userNew) {
+          // If the member starts playing a game
           if (b.presenceGameConditional(userOld, userNew)) {
+
             var today = new Date();
             var curDate = b.parseDate(today);
             var gameName = b.getGameName(userNew.game.name);
@@ -345,6 +347,36 @@ module.exports = function(app) {
                       gameId: curGame.id
                     });
                   });
+              })
+              .catch(function(err) {
+                console.log(err);
+              });
+          } else if (b.presenceUsernameChangeConditional(userOld, userNew)) {
+            //if the member changes their username
+            var today0 = new Date();
+            var curDate0 = b.parseDate(today0);
+            var zeroDate0 = new Date(0).toISOString();
+
+            console.log(userOld.username + ' changed username to ' + userNew.username);
+
+            Gamer.findOrCreate({
+                where: {
+                  userName: userOld.username
+                }
+              }, {
+                userName: userOld.username,
+                discordUserId: userOld.id,
+                lastForumPost: zeroDate0,
+                lastForumVisit: zeroDate0,
+                lastDiscordChatMessage: zeroDate0,
+                lastDiscordVoiceConnect: zeroDate0,
+                activeDiscordAccount: "true",
+                role: '@Guest'
+              })
+              .then(function(user) {
+                var curGamer = user[0];
+                curGamer.userName = userNew.username;
+                return curGamer.save();
               })
               .catch(function(err) {
                 console.log(err);
