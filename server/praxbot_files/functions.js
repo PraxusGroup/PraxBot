@@ -113,7 +113,6 @@ exports.getPrimaryRole = function(rolesArray) {
 };
 
 exports.getGameName = function(gameTitle) {
-  console.log('original: ' + gameTitle);
   var titleToSwitch = gameTitle.toLowerCase();
   if (titleToSwitch === 'arma iii'.toLowerCase()) {
     return 'Arma 3';
