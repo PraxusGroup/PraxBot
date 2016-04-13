@@ -27,12 +27,63 @@ exports.searchArray = function(nameKey, myArray, myProperty) {
   }
 };
 
-exports.searchArrayNo = function(nameKey, myArray, myProperty) {
-  for (var i = 0; i < myArray.length; i++) {
-    if (myArray[i][myProperty] === nameKey) {
-      return i;
+exports.calculateGameWeekStats = function(dayValues, allValues) {
+  for (var i = 0; i < dayValues.length; i++) {
+    var dayValuesGame = dayValues[i].toJSON();
+    var curGame = dayValuesGame.game.title,
+      recScore = Number(dayValues[i].score),
+      newScore = 0,
+      targetElement = this.searchArrayNo(curGame, allValues, 'title');
+    if (targetElement === '666') {
+      allValues.push({
+        title: curGame,
+        weekscore: recScore
+      });
+    } else {
+      newScore = (Number(allValues[targetElement].weekscore) + recScore);
+      allValues[targetElement].weekscore = newScore;
     }
   }
+  return allValues;
+};
+
+//broken
+/*exports.searchArrayNoEmbed = function(nameKey, myArray, myPropertyOne, myPropertyTwo) {
+  console.log(myArray);
+  for (var i = 0; i < myArray.length; i++) {
+    //console.log(myArray[i].hasOwnProperty(myPropertyOne));
+    if (myArray[i].hasOwnProperty(myPropertyOne)) {
+      if (myArray[i][myPropertyOne].hasOwnProperty(myPropertyTwo)) {
+        if (myArray[i][myPropertyOne][myPropertyTwo] === nameKey) {
+          return i;
+        }
+      } else {
+        return '666';
+      }
+    } else {
+      return '666';
+    }
+  }
+  return '666';
+};*/
+
+exports.searchArray = function(nameKey, myArray, myProperty) {
+  for (var i = 0; i < myArray.length; i++) {
+    if (myArray[i][myProperty] === nameKey) {
+      return myArray[i];
+    }
+  }
+};
+
+exports.searchArrayNo = function(nameKey, myArray, myProperty) {
+  for (var i = 0; i < myArray.length; i++) {
+    if (myArray[i].hasOwnProperty(myProperty)) {
+      if (myArray[i][myProperty] === nameKey) {
+        return i;
+      }
+    }
+  }
+  return '666';
 };
 
 exports.errorHandler = function(err) {
@@ -62,9 +113,18 @@ exports.getPrimaryRole = function(rolesArray) {
 };
 
 exports.getGameName = function(gameTitle) {
+  console.log('original: ' + gameTitle);
   var titleToSwitch = gameTitle.toLowerCase();
-  if (titleToSwitch === 'arma III') {
+  if (titleToSwitch === 'arma iii'.toLowerCase()) {
     return 'Arma 3';
+  } else if (titleToSwitch === 'day z'.toLowerCase()) {
+    return 'DayZ';
+  } else if (titleToSwitch === 'skyrim'.toLowerCase()) {
+    return 'The Elder Scrolls V: Skyrim';
+  } else if (titleToSwitch === 'FINAL FANTASY XIV'.toLowerCase()) {
+    return 'FINAL FANTASY XIV - A Realm Reborn';
+  } else if (titleToSwitch === 'Total War Rome II'.toLowerCase()) {
+    return 'Total War: ROME 2';
   } else {
     return gameTitle;
   }

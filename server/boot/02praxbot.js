@@ -331,7 +331,6 @@ module.exports = function(app) {
                 role: '@Guest'
               })
               .then(function(user) {
-
                 Game.findOrCreate({
                     where: {
                       title: gameName
