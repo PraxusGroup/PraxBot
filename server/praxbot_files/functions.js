@@ -35,6 +35,10 @@ exports.searchArrayNo = function(nameKey, myArray, myProperty) {
   }
 };
 
+exports.errorHandler = function(err) {
+  console.log(err.stack);
+};
+
 exports.getPrimaryRole = function(rolesArray) {
   if (rolesArray.length > 0) {
     //this array is not empty

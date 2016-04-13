@@ -1,3 +1,15 @@
+/* Initialize all the things */
+var discord = require('discord.js'),
+  config = require('../praxbot_files/config.json'),
+  b = require('../praxbot_files/functions.js'),
+  CronJob = require('cron').CronJob,
+  request = require('request'),
+  praxBot = new discord.Client(),
+  botLogin = config.praxbot.login,
+  botPassword = config.praxbot.password,
+  generalChannelId = config.praxbot.generalChatChannelId,
+  serverId = config.praxbot.id;
+
 /* jshint maxlen: false */
 /*jshint quotmark: false */
 module.exports = function(app) {
@@ -9,30 +21,20 @@ module.exports = function(app) {
    * for more info.
    */
 
-  /* Initialize all the things */
-  var discord = require('discord.js'),
-    config = require('../praxbot_files/config.json'),
-    b = require('../praxbot_files/functions.js'),
-    CronJob = require('cron').CronJob,
-    request = require('request'),
-    praxBot = new discord.Client(),
-    Gamer = app.models.Gamer,
+  var Gamer = app.models.Gamer,
     Voiplog = app.models.Voiplog,
     Chatlog = app.models.Chatlog,
     Gamelog = app.models.Gamelog,
     Forumvisitlog = app.models.Forumvisitlog,
     Forumpostlog = app.models.Forumpostlog,
-    Game = app.models.Game,
-    botLogin = config.praxbot.login,
-    botPassword = config.praxbot.password,
-    generalChannelId = config.praxbot.generalChatChannelId,
-    serverId = config.praxbot.id;
+    Gamepopularitylog = app.models.Gamepopularitylog,
+    Game = app.models.Game;
 
   loadPraxbot();
 
   function loadPraxbot() {
-    praxBot.login(botLogin, botPassword)
-      .then(function(loadedBot) {
+    praxBot.login(botLogin, botPassword, function(err, token) {
+      if (token) {
         console.log('Praxbot Connected');
 
         /* On a disconnect, usually due to DDOS attacks*/
@@ -113,6 +115,11 @@ module.exports = function(app) {
           if (content === 'initmemberproperties()' &&
             author === 'Whiplash') {
             initMemberProperties();
+          }
+          // Get the most popular games this week
+          if (content === 'calculateallpopularity()' &&
+            author === 'Whiplash') {
+            calculateAllPopularity();
           }
           // A little extra bot support for a powerful Drevan move.
           if (content === 'get dunked' &&
@@ -385,7 +392,7 @@ module.exports = function(app) {
         });
 
         // Initiate the Cron that will get forum activity
-        // cronTime: '0 */15 * * * *' --> every 15 minutes
+        // cronTime: '0 */30 * * * *' --> Every half hour
         var forumCron = new CronJob({
           cronTime: '0 */30 * * * *',
           onTick: function() {
@@ -395,140 +402,228 @@ module.exports = function(app) {
           start: true
         });
 
-        function updateForumVariables() {
-          Gamer.find()
-            .then(function(allGamers) {
-              function updateGamer(i) {
-                if (i < allGamers.length) {
-                  console.log("Forum Activity Update " + (i + 1) + "/" + allGamers.length + " - " + allGamers[i].userName);
-                  var gamerURLTag = ((allGamers[i].forumAlias) ? allGamers[i].forumAlias.toLowerCase() : allGamers[i].userName.toLowerCase().replace(" ", "-")),
-                    url = 'http://nodebb.praxusgroup.com/api/user/' + gamerURLTag;
-                  request.get({
-                    url: url,
-                    json: true
-                  }, function(e, r, b) {
-                    var lastOnline = new Date(0).toISOString(),
-                      lastPost = new Date(0).toISOString();
-                    if (!e && r.statusCode === 200) {
-                      lastOnline = new Date(b.lastonline).toISOString();
-                      lastPost = new Date(b.lastposttime).toISOString();
-                    }
-                    allGamers[i].lastForumPost = lastPost;
-                    allGamers[i].lastForumVisit = lastOnline;
-                    allGamers[i].save()
-                      .then(function(complete) {
-                        Forumvisitlog.findOrCreate({
+        // Initiate the Cron that will calculate game popularity
+        // cronTime: '0 15/30 * * * *' --> Every half hour at 00:15 and 00:45
+        var gamePopularityCron = new CronJob({
+          cronTime: '0 15/30 * * * *',
+          onTick: function() {
+            console.log("Calculating Games Popularity");
+            var today = new Date();
+            var curDate = b.parseDate(today);
+            calculateAllGamePopularity(curDate.dbDate);
+          },
+          start: true
+        });
+
+      } else if (err) {
+        console.log('Praxbot could not connect... Retrying...');
+        setTimeout(function() {
+          loadPraxbot();
+        }, 5000);
+      }
+    });
+
+    function calculateAllGamePopularity(dateString, cb) {
+      Game.find()
+        .then(function(allGames) {
+          function updateGamePopularity(i) {
+            if (i < allGames.length) {
+              Gamelog.find({
+                  where: {
+                    gameId: allGames[i].id,
+                    playedOn: dateString
+                  }
+                })
+                .then(function(gamelogsFound) {
+                  if (gamelogsFound.length) {
+                    Gamepopularitylog.findOrCreate({
+                        where: {
+                          date: dateString,
+                          gameId: allGames[i].id
+                        }
+                      }, {
+                        date: dateString,
+                        gameId: allGames[i].id
+                      })
+                      .then(function(gamepopularitylogFound) {
+                        var curLog = gamepopularitylogFound[0];
+                        curLog.score = gamelogsFound.length.toString();
+                        curLog.save()
+                          .then(function(savedRecord) {
+                            console.log(allGames[i].title + '\'s score: ' + gamelogsFound.length);
+                            updateGamePopularity(i + 1);
+                          });
+                      })
+                      .catch(b.errorHandler);
+                  } else {
+                    updateGamePopularity(i + 1);
+                  }
+                })
+                .catch(b.errorHandler);
+            } else {
+              console.log("Games Popularity calculation completed for " + dateString);
+              if (cb && typeof(cb) === "function") {
+                cb();
+              }
+            }
+          }
+          updateGamePopularity(0);
+        })
+        .catch(b.errorHandler);
+    }
+
+    // Run the game popularity logic for all the data we have
+    function calculateAllPopularity() {
+      var now = new Date(),
+      d = new Date(2016,3,1);
+      function runNextDate(d) {
+        if (d <= now) {
+          var dateString = b.parseDate(d).dbDate;
+          calculateAllGamePopularity(dateString, function() {
+            if (typeof d !== 'object') {
+              d = new Date(d);
+            }
+             runNextDate(d.setDate(d.getDate() + 1));
+          });
+        }
+      }
+      runNextDate(d);
+    }
+
+    function updateForumVariables() {
+      Gamer.find()
+        .then(function(allGamers) {
+          function updateGamer(i) {
+            if (i < allGamers.length) {
+              console.log("Forum Activity Update " + (i + 1) + "/" +
+                allGamers.length + " - " + allGamers[i].userName);
+              var gamerURLTag = ((allGamers[i].forumAlias) ? allGamers[i].forumAlias.toLowerCase() : allGamers[i].userName.toLowerCase().replace(" ", "-")),
+                url = 'http://nodebb.praxusgroup.com/api/user/' + gamerURLTag;
+              request.get({
+                url: url,
+                json: true
+              }, function(e, r, b) {
+                var lastOnline = new Date(0).toISOString(),
+                  lastPost = new Date(0).toISOString();
+                if (!e && r.statusCode === 200) {
+                  lastOnline = new Date(b.lastonline).toISOString();
+                  lastPost = new Date(b.lastposttime).toISOString();
+                }
+                allGamers[i].lastForumPost = lastPost;
+                allGamers[i].lastForumVisit = lastOnline;
+                allGamers[i].save()
+                  .then(function(complete) {
+                    Forumvisitlog.findOrCreate({
+                        where: {
+                          visitedOn: lastOnline.substr(0, 10),
+                          gamerId: allGamers[i].id
+                        }
+                      }, {
+                        visitedOn: lastOnline.substr(0, 10),
+                        gamerId: allGamers[i].id
+                      })
+                      .then(function(morecomplete) {
+                        Forumpostlog.findOrCreate({
                             where: {
-                              visitedOn: lastOnline.substr(0, 10),
+                              postedOn: lastPost.substr(0, 10),
                               gamerId: allGamers[i].id
                             }
                           }, {
-                            visitedOn: lastOnline.substr(0, 10),
+                            postedOn: lastPost.substr(0, 10),
                             gamerId: allGamers[i].id
                           })
-                          .then(function(morecomplete) {
-                            Forumpostlog.findOrCreate({
-                                where: {
-                                  postedOn: lastPost.substr(0, 10),
-                                  gamerId: allGamers[i].id
-                                }
-                              }, {
-                                postedOn: lastPost.substr(0, 10),
-                                gamerId: allGamers[i].id
-                              })
-                              .then(function(finalcomplete) {
-                                updateGamer(i + 1);
-                              });
+                          .then(function(finalcomplete) {
+                            updateGamer(i + 1);
                           });
                       });
                   });
-                } else {
-                  console.log("Forum activity update completed");
+              });
+            } else {
+              console.log("Forum activity update completed");
+            }
+          }
+          updateGamer(0);
+        })
+        .catch(console.log);
+    }
+
+    function getAllMembers() {
+      console.log("Starting");
+      var allMembers = praxBot.servers[0].members;
+      var i = 0;
+      var zeroDate = new Date(0).toISOString();
+      var praxusServer = praxBot.servers.get("id", serverId);
+      var primaryRole = "";
+
+      function updateGamer(i) {
+        if (i < allMembers.length) {
+          primaryRole = b.getPrimaryRole(praxusServer.rolesOfUser(allMembers[i]));
+          console.log("Forum Activity Update " + (i + 1) + "/" + allMembers.length + " - " + allMembers[i].username + " " + primaryRole);
+          Gamer.findOrCreate({
+              where: {
+                userName: allMembers[i].username
+              }
+            }, {
+              userName: allMembers[i].username,
+              discordUserId: allMembers[i].id,
+              lastForumPost: zeroDate,
+              lastForumVisit: zeroDate,
+              lastDiscordChatMessage: zeroDate,
+              lastDiscordVoiceConnect: zeroDate,
+              activeDiscordAccount: "true",
+              role: primaryRole
+            })
+            .then(function(res) {
+              var curGamer = res[0];
+              curGamer.discordUserId = allMembers[i].id;
+              curGamer.role = primaryRole;
+              return curGamer.save();
+            })
+            .then(function(complete) {
+              updateGamer(i + 1);
+            });
+        }
+      }
+      updateGamer(0);
+    }
+
+    function initMemberProperties() {
+      console.log("Starting");
+      var i = 0;
+      var zeroDate = new Date(0).toISOString();
+
+      Gamer.find()
+        .then(function(allGamers) {
+          function updateGamer(i) {
+            if (i < allGamers.length) {
+              console.log("Updating Properties " + (i + 1) + "/" + allGamers.length + " - " + allGamers[i].username);
+              var curGamer = allGamers[i];
+              if (curGamer.lastForumPost) {
+                if (curGamer.lastForumPost === '1980-01-01T00:00:00.000Z') {
+                  curGamer.lastForumPost = zeroDate;
                 }
               }
-              updateGamer(0);
-            })
-            .catch(console.log);
-        }
-
-        function getAllMembers() {
-          console.log("Starting");
-          var allMembers = praxBot.servers[0].members;
-          var i = 0;
-          var zeroDate = new Date(0).toISOString();
-          var praxusServer = praxBot.servers.get("id", serverId);
-          var primaryRole = "";
-
-          function updateGamer(i) {
-            if (i < allMembers.length) {
-              primaryRole = b.getPrimaryRole(praxusServer.rolesOfUser(allMembers[i]));
-              console.log("Forum Activity Update " + (i + 1) + "/" + allMembers.length + " - " + allMembers[i].username + " " + primaryRole);
-              Gamer.findOrCreate({
-                  where: {
-                    userName: allMembers[i].username
-                  }
-                }, {
-                  userName: allMembers[i].username,
-                  discordUserId: allMembers[i].id,
-                  lastForumPost: zeroDate,
-                  lastForumVisit: zeroDate,
-                  lastDiscordChatMessage: zeroDate,
-                  lastDiscordVoiceConnect: zeroDate,
-                  activeDiscordAccount: "true",
-                  role: primaryRole
-                })
-                .then(function(res) {
-                  var curGamer = res[0];
-                  curGamer.discordUserId = allMembers[i].id;
-                  curGamer.role = primaryRole;
-                  return curGamer.save();
-                })
-                .then(function(complete) {
+              if (curGamer.lastForumVisit) {
+                if (curGamer.lastForumVisit === '1980-01-01T00:00:00.000Z') {
+                  curGamer.lastForumVisit = zeroDate;
+                }
+              }
+              curGamer.lastForumPost = (curGamer.lastForumPost) ? curGamer.lastForumPost : zeroDate;
+              curGamer.lastForumVisit = (curGamer.lastForumVisit) ? curGamer.lastForumVisit : zeroDate;
+              curGamer.lastDiscordChatMessage = (curGamer.lastDiscordChatMessage) ? curGamer.lastDiscordChatMessage : zeroDate;
+              curGamer.lastDiscordVoiceConnect = (curGamer.lastDiscordVoiceConnect) ? curGamer.lastDiscordVoiceConnect : zeroDate;
+              curGamer.activeDiscordAccount = (curGamer.activeDiscordAccount) ? curGamer.activeDiscordAccount : "true";
+              curGamer.role = (curGamer.role) ? curGamer.role : '@Guest';
+              curGamer.activeDiscordAccount = "true";
+              curGamer.save()
+                .then(function(completed) {
+                  console.log("Updating Properties " + (i + 1) + "/" + allGamers.length + " - " + allGamers[i].username + ' - done');
                   updateGamer(i + 1);
                 });
             }
           }
           updateGamer(0);
-        }
-
-        function initMemberProperties() {
-          console.log("Starting");
-          var i = 0;
-          var zeroDate = new Date(0).toISOString();
-
-          Gamer.find()
-            .then(function(allGamers) {
-              function updateGamer(i) {
-                if (i < allGamers.length) {
-                  console.log("Updating Properties " + (i + 1) + "/" + allGamers.length + " - " + allGamers[i].username);
-                  var curGamer = allGamers[i];
-                  if (curGamer.lastForumPost) {
-                    if (curGamer.lastForumPost === '1980-01-01T00:00:00.000Z') {
-                      curGamer.lastForumPost = zeroDate;
-                    }
-                  }
-                  if (curGamer.lastForumVisit) {
-                    if (curGamer.lastForumVisit === '1980-01-01T00:00:00.000Z') {
-                      curGamer.lastForumVisit = zeroDate;
-                    }
-                  }
-                  curGamer.lastForumPost = (curGamer.lastForumPost) ? curGamer.lastForumPost : zeroDate;
-                  curGamer.lastForumVisit = (curGamer.lastForumVisit) ? curGamer.lastForumVisit : zeroDate;
-                  curGamer.lastDiscordChatMessage = (curGamer.lastDiscordChatMessage) ? curGamer.lastDiscordChatMessage : zeroDate;
-                  curGamer.lastDiscordVoiceConnect = (curGamer.lastDiscordVoiceConnect) ? curGamer.lastDiscordVoiceConnect : zeroDate;
-                  curGamer.activeDiscordAccount = (curGamer.activeDiscordAccount) ? curGamer.activeDiscordAccount : "true";
-                  curGamer.role = (curGamer.role) ? curGamer.role : '@Guest';
-                  curGamer.activeDiscordAccount = "true";
-                  curGamer.save()
-                    .then(function(completed) {
-                      console.log("Updating Properties " + (i + 1) + "/" + allGamers.length + " - " + allGamers[i].username + ' - done');
-                      updateGamer(i + 1);
-                    });
-                }
-              }
-              updateGamer(0);
-            });
-        }
-      });
+        });
+    }
   }
 };

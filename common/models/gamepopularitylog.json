@@ -1,0 +1,26 @@
+{
+  "name": "Gamepopularitylog",
+  "plural": "gamepopularitylogs",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "date": {
+      "type": "date"
+    },
+    "score": {
+      "type": "string"
+    }
+  },
+  "validations": [],
+  "relations": {
+    "game": {
+      "type": "belongsTo",
+      "model": "Game"
+    }
+  },
+  "acls": [],
+  "methods": {}
+}
