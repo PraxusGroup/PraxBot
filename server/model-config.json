@@ -14,47 +14,47 @@
     ]
   },
   "Gamer": {
-    "dataSource": "memory",
+    "dataSource": "mlab",
     "public": true,
     "$promise": {},
     "$resolved": true
   },
   "Game": {
-    "dataSource": "memory",
+    "dataSource": "mlab",
     "public": true,
     "$promise": {},
     "$resolved": true
   },
   "Voiplog": {
-    "dataSource": "memory",
+    "dataSource": "mlab",
     "public": true,
     "$promise": {},
     "$resolved": true
   },
   "Gamepopularitylog": {
-    "dataSource": "memory",
+    "dataSource": "mlab",
     "public": true
   },
   "Gamelog": {
-    "dataSource": "memory",
+    "dataSource": "mlab",
     "public": true,
     "$promise": {},
     "$resolved": true
   },
   "Chatlog": {
-    "dataSource": "memory",
+    "dataSource": "mlab",
     "public": true,
     "$promise": {},
     "$resolved": true
   },
   "Forumvisitlog": {
-    "dataSource": "memory",
+    "dataSource": "mlab",
     "public": true,
     "$promise": {},
     "$resolved": true
   },
   "Forumpostlog": {
-    "dataSource": "memory",
+    "dataSource": "mlab",
     "public": true,
     "$promise": {},
     "$resolved": true
