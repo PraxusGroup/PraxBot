@@ -94,13 +94,13 @@ exports.getPrimaryRole = function(rolesArray) {
   if (rolesArray.length > 0) {
     //this array is not empty
     for (var i = 0; i < rolesArray.length; i++) {
-      if (exports.searchArrayNo('@Executive Administrator', rolesArray, 'name') !== undefined) {
+      if (exports.searchArrayNo('@Executive Administrator', rolesArray, 'name') !== '666') {
         return '@Executive Administrator';
-      } else if (exports.searchArrayNo('@Administrators', rolesArray, 'name') !== undefined) {
+      } else if (exports.searchArrayNo('@Administrators', rolesArray, 'name') !== '666') {
         return '@Administrator';
-      } else if (exports.searchArrayNo('@Member', rolesArray, 'name') !== undefined) {
+      } else if (exports.searchArrayNo('@Member', rolesArray, 'name') !== '666') {
         return '@Member';
-      } else if (exports.searchArrayNo('@Applicant', rolesArray, 'name') !== undefined) {
+      } else if (exports.searchArrayNo('@Applicant', rolesArray, 'name') !== '666') {
         return '@Applicant';
       } else {
         return '@Guest';
