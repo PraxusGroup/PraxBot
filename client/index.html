@@ -1,0 +1,59 @@
+<html>
+
+<head>
+    <base href="/">
+    <title>Praxus Metrics</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- 1. Load libraries -->
+    <!-- IE required polyfills, in this exact order -->
+    <script src="node_modules/es6-shim/es6-shim.min.js"></script>
+    <script src="node_modules/systemjs/dist/system-polyfills.js"></script>
+    <script src="node_modules/angular2/es6/dev/src/testing/shims_for_IE.js"></script>
+    <script src="node_modules/angular2/bundles/angular2-polyfills.js"></script>
+    <script src="node_modules/systemjs/dist/system.src.js"></script>
+    <script src="node_modules/rxjs/bundles/Rx.js"></script>
+    <script src="node_modules/angular2/bundles/angular2.dev.js"></script>
+    <script src="node_modules/moment/min/moment.min.js"></script>
+
+    <!-- Router -->
+    <script src="node_modules/angular2/bundles/router.dev.js"></script>
+
+    <!-- http -->
+    <script src="node_modules/angular2/bundles/http.dev.js"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="app/praxtools.css">
+
+    <!-- Custom Fonts -->
+    <link href="app/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+    <!-- charts -->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+        google.charts.load('current', {
+            'packages': ['corechart','calendar']
+        });
+    </script>
+
+    <!-- 2. Configure SystemJS -->
+    <script>
+        System.config({
+            packages: {
+                app: {
+                    format: 'register',
+                    defaultExtension: 'js'
+                }
+            }
+        });
+        System.import('app/main')
+            .then(null, console.error.bind(console));
+    </script>
+</head>
+
+<body>
+    <my-app>Loading...</my-app>
+</body>
+
+</html>
