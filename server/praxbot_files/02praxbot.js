@@ -30,19 +30,15 @@ module.exports = function(app) {
     Gamepopularitylog = app.models.Gamepopularitylog,
     Game = app.models.Game;
 
-  loadPraxbot();
+      praxBot.login(botLogin, botPassword);
 
-  function loadPraxbot() {
-    praxBot.login(botLogin, botPassword, function(err, token) {
-      if (token) {
-        console.log('Praxbot Connected');
 
         /* On a disconnect, usually due to DDOS attacks*/
         /* We will wait 5 seconds and log back in.*/
         praxBot.on('disconnected', function() {
           console.log('Praxbot Disconnected... attempting to reconnect.');
           setTimeout(function() {
-            loadPraxbot();
+            praxBot.login(botLogin, botPassword);
           }, 5000);
         });
 
@@ -414,14 +410,6 @@ module.exports = function(app) {
           start: true
         });
 
-      } else if (err) {
-        console.log('Praxbot could not connect... Retrying...');
-        setTimeout(function() {
-          loadPraxbot();
-        }, 5000);
-      }
-    });
-
     function calculateAllGamePopularity(dateString, cb) {
       Game.find()
         .then(function(allGames) {
@@ -624,5 +612,4 @@ module.exports = function(app) {
           updateGamer(0);
         });
     }
-  }
 };

@@ -1,5 +1,6 @@
 var moment = require('moment');
 var quotes = require('../praxbot_files/quotes.json');
+var config = require('../praxbot_files/config.json');
 
 exports.randomQuote = function(quoteType) {
   var quoteList = quotes[quoteType];
@@ -24,6 +25,13 @@ exports.searchArray = function(nameKey, myArray, myProperty) {
     if (myArray[i][myProperty] === nameKey) {
       return myArray[i];
     }
+  }
+};
+
+exports.log = function(log, level) {
+  var pre = 'PraxBot: ';
+  if (level <= config.praxbot.debug || config.praxbot.debug) {
+    console.log(pre + log);
   }
 };
 

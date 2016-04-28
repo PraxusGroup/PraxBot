@@ -58,5 +58,11 @@
     "public": true,
     "$promise": {},
     "$resolved": true
+  },
+  "Quote": {
+    "dataSource": "mlab",
+    "public": true,
+    "$promise": {},
+    "$resolved": true
   }
 }
