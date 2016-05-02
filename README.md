@@ -3,6 +3,8 @@ is a [Discord.js](https://github.com/hydrabolt/discord.js) bot written for the [
 
 The reason why we implemented this bot is because it could both help us as a tool in terms of measuring the health of our community as well as track attendance of new recruits.
 
+The eventual goal is to incorporate much of this functionality with the future Praxus Community suite.
+
 #### Praxbot functionality
 - Welcome new members into the server.
 - Allow users to request a random quote from other members or the STAR WARS movies.
@@ -14,6 +16,7 @@ The reason why we implemented this bot is because it could both help us as a too
 - Report metrics on:
   - Member attendance to community comms / forums
   - Game popularity
+
 
 
 
