@@ -1,9 +1,9 @@
 var moment = require('moment');
-var b = require('../../server/praxbot_files/functions.js');
+var b = require('../../server/praxbot_files_old/functions.js');
 
 //server\praxbot_files\functions.js
 
-module.exports = function(Gamepopularitylog) { 
+module.exports = function(Gamepopularitylog) {
 
   // This function renders a list of the most popular games based on
   // the week number argument.

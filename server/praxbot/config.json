@@ -1,0 +1,13 @@
+{
+  "login": "stijn.winand@live.be",
+  "password": "Jupiter55/*",
+  "serverId": "129037173486911488",
+  "generalId": "129037173486911488",
+  "debug": true,
+  "botOptions": {
+    "autoReconnect": true,
+    "compress": true,
+    "forceFetchUsers": true,
+    "largeThreshold": 250
+  }
+}

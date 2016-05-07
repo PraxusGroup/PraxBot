@@ -1,6 +1,6 @@
 var moment = require('moment');
-var quotes = require('../praxbot_files/quotes.json');
-var config = require('../praxbot_files/config.json');
+var quotes = require('../praxbot_files_old/quotes.json');
+var config = require('../praxbot_files_old/config.json');
 
 exports.randomQuote = function(quoteType) {
   var quoteList = quotes[quoteType];

@@ -16,6 +16,9 @@
     "role": {
       "type": "string"
     },
+    "discordAvatarURL": {
+      "type": "string"
+    },
     "lastDiscordChatMessage": {
       "type": "string"
     },

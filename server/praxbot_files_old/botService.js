@@ -4,11 +4,9 @@ var constructor = require('../praxbot_files/constructors');
 var utility = require('../praxbot_files/utility');
 
 
-console.log('botService');
-console.log(constructor);
-
 // Initialize all the loopback model objects
 var m = new constructor.ModelsObject();
+
 
 var dbFunctions = function() {
 

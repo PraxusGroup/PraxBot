@@ -1,0 +1,16 @@
+{
+  "praxbot": {
+    "login": "stijn.winand@live.be",
+    "password": "Jupiter55/*",
+    "id": "129037173486911488",
+    "generalChatChannelId" : "129037173486911488",
+    "debug" : true,
+    "debugLevel" : 5,
+    "botOptions" : {
+      "autoReconnect": true,
+      "compress": true,
+      "forceFetchUsers": true,
+      "largeThreshold": 250
+    }
+  }
+}

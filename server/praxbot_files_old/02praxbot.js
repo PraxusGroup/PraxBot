@@ -13,6 +13,7 @@ var discord = require('discord.js'),
 /* jshint maxlen: false */
 /*jshint quotmark: false */
 module.exports = function(app) {
+
   /*
    * The `app` object provides access to a variety of LoopBack resources such as
    * models (e.g. `app.models.YourModelName`) or data sources (e.g.
@@ -31,7 +32,6 @@ module.exports = function(app) {
     Game = app.models.Game;
 
       praxBot.login(botLogin, botPassword);
-
 
         /* On a disconnect, usually due to DDOS attacks*/
         /* We will wait 5 seconds and log back in.*/

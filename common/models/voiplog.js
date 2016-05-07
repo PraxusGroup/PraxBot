@@ -1,5 +1,5 @@
 var moment = require('moment');
-var b = require('../../server/praxbot_files/functions.js');
+var b = require('../../server/praxbot_files_old/functions.js');
 
 module.exports = function(Voiplog) {
 

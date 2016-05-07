@@ -4,7 +4,6 @@ var utility = require('../praxbot_files/utility');
 
 var constructors = function() {
 
-
   var BotObject = function() {
     r.func.log('constructor - BotObject - start');
     this.client = new r.discord.Client(r.config.praxbot.botOptions);
@@ -15,7 +14,7 @@ var constructors = function() {
     this.serverObject = this.client.servers.get('id', this.serverId);
   };
 
-  var DecisionObject = function (message) {
+  var DecisionObject = function(message) {
     this.answer = '';
     this.reply = '';
     this.originalContent = message.content;
@@ -40,15 +39,9 @@ var constructors = function() {
 
   var ModelsObject = function() {
     r.func.log('constructor - ModelsObject');
-    this.Gamer = r.app.models.Gamer;
-    this.Voiplog = r.app.models.Voiplog;
-    this.Chatlog = r.app.models.Chatlog;
-    this.Gamelog = r.app.models.Gamelog;
-    this.Forumvisitlog = r.app.models.Forumvisitlog;
-    this.Forumpostlog = r.app.models.Forumpostlog;
-    this.Gamepopularitylog = r.app.models.Gamepopularitylog;
-    this.Game = r.app.models.Game;
-    this.Quote = r.app.models.Quote;
+    for (var model in r.app.models) {
+      this[model] = r.app.models[model];
+    }
   };
 
   var QuoteCategoryObject = function(category) {
