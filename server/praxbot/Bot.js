@@ -1,5 +1,5 @@
 var discord = require('discord.js');
-var Prom = require('bluebird');
+var BPromise = require('bluebird');
 var config = require('../praxbot/config');
 var utility = require('../praxbot/utility');
 var Chat = require('../praxbot/Chat');
@@ -15,20 +15,19 @@ function Bot(app) {
   _bot.app = app;
   _bot.client = new discord.Client(config.botOptions);
 
-
-  _bot.
-  login().
-  then(_bot.loadCache).
-  then(_bot.syncCacheWithDB).
-  then(_bot.initModules).
-  then(utility.log).
-  catch(utility.err);
+  _bot
+    .login()
+    .then(_bot.loadCache)
+    .then(_bot.syncCacheWithDB)
+    .then(_bot.initModules)
+    .then(utility.log)
+    .catch(utility.err);
 }
 
 // This connects the bot with discord's central server.
 Bot.prototype.login = function() {
   var _bot = this;
-  return new Prom(function(resolve, reject) {
+  return new BPromise(function(resolve, reject) {
     utility.log('Connecting');
     _bot.client.login(config.login, config.password, function(err, token) {
       if (token) {
@@ -44,7 +43,7 @@ Bot.prototype.login = function() {
 // After logging in, the bot automatically caches server objects
 // We have to wait for this to complete before we listen for events.
 Bot.prototype.loadCache = function(_bot) {
-  return new Prom(function(resolve, reject) {
+  return new BPromise(function(resolve, reject) {
     utility.log('Caching discord data');
     _bot.client.on('ready', function() {
       utility.log('Discord data cached');
@@ -60,7 +59,7 @@ Bot.prototype.initModules = function(_bot) {
   this.User = new User(_bot);
   this.Chat = new Chat(_bot);
   this.Game = new Game(_bot);
-  return new Prom.resolve('Bot modules initialized');
+  return BPromise.resolve('Bot modules initialized');
 };
 
 // Facade function for getting the server object
@@ -79,7 +78,7 @@ Bot.prototype.syncCacheWithDB = function(_bot) {
   var Gamer = _bot.app.models.Gamer;
   var i = 0;
 
-  return new Prom(function(resolve, reject) {
+  return new BPromise(function(resolve, reject) {
     function updateMember(i) {
       if (i < allMembers.length) {
         var primaryRole = utility.getPrimaryRole(server.rolesOfUser(allMembers[i]));

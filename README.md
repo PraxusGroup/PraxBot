@@ -16,9 +16,3 @@ The eventual goal is to incorporate much of this functionality with the future P
 - Report metrics on:
   - Member attendance to community comms / forums
   - Game popularity
-
-
-
-
-
-
