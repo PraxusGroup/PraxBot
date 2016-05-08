@@ -1,22 +1,18 @@
-var Prom = require('bluebird');
+var BPromise = require('bluebird');
 var utility = require('../praxbot/utility');
 var config = require('../praxbot/config');
 var moment = require('moment');
 var CronJob = require('cron').CronJob;
+var changes = require('../praxbot/changes');
 
 module.exports = Game;
 
-var _parent;
-var _Game;
-var _Bot;
-var _db;
-
 function Game(parent) {
   utility.log('Init - Game');
-  _parent = parent;
-  _Game = this;
-  _Bot = parent.client;
-  _db = parent.app.models;
+  this._parent = parent;
+  this._Game = this;
+  this._Bot = parent.client;
+  this._db = parent.app.models;
   this.initEvents();
   this.startPopularityCron();
 }
@@ -24,15 +20,25 @@ function Game(parent) {
 // This function turns the event listener(s) on and all logic
 // that needs to fire when triggered.
 Game.prototype.initEvents = function() {
-  _Bot.on('presence', function(oldUser, newUser) {
-    _Game.startGame(oldUser, newUser);
+  var _this = this;
+
+  _this._Bot.on('presence', function(oldUser, newUser) {
+    _this._Game.startGame(oldUser, newUser);
   });
 };
 
 // When a new discord account connects to the Praxus server.
 Game.prototype.startGame = function(oldUser, newUser) {
-  if (utility.presenceGameConditional(oldUser, newUser)) {
-    _Game.syncDBWithDiscord(newUser);
+  var _this = this;
+
+  oldUser = utility.userToObject(oldUser);
+  newUser = utility.userToObject(newUser);
+
+  if(!newUser.game) return;
+
+  if (newUser.game && !oldUser.game ||
+    JSON.stringify(newUser.game) !== JSON.stringify(oldUser.game)) {
+    _this._Game.syncDBWithDiscord(newUser);
   }
 };
 
@@ -41,15 +47,17 @@ Game.prototype.startGame = function(oldUser, newUser) {
 //   2. We create or find the game.
 //   4. We store a record in the gamelog collection
 Game.prototype.syncDBWithDiscord = function(newUser) {
-  return new Prom(function(resolve, reject) {
+  var _this = this;
+
+  return new BPromise(function(resolve, reject) {
     var playedOnDate = moment().format('YYYY-MM-DD');
     var gameTitle = utility.getGameName(newUser.game.name);
     var userObject;
     var gameObject;
     utility.log(newUser.username + ' started playing ' + gameTitle);
-    _db.Gamer.syncDBWithDiscord(newUser, function(user) {
+    _this._db.Gamer.syncDBWithDiscord(newUser, function(user) {
       userObject = user[0];
-      _db.Game.findOrCreate({
+      _this._db.Game.findOrCreate({
         where: {
           title: gameTitle
         }
@@ -58,7 +66,7 @@ Game.prototype.syncDBWithDiscord = function(newUser) {
       }).
       then(function(game) {
         gameObject = game[0];
-        return _db.Gamelog.findOrCreate({
+        return _this._db.Gamelog.findOrCreate({
           where: {
             gamerId: userObject.id,
             playedOn: playedOnDate,
@@ -78,6 +86,8 @@ Game.prototype.syncDBWithDiscord = function(newUser) {
 
 //  We start the cron that calculates the game popularity calculations
 Game.prototype.startPopularityCron = function() {
+  var _this = this;
+
   // Initiate the Cron that will calculate game popularity
   // cronTime: '0 15/30 * * * *' --> Every half hour at 00:15 and 00:45
   var gamePopularityCron = new CronJob({
@@ -85,7 +95,7 @@ Game.prototype.startPopularityCron = function() {
     onTick: function() {
       utility.log('Calculating Games Popularity');
       var today = moment().format('YYYY-MM-DD');
-      _Game.calculateAllGamePopularity(today);
+      _this._Game.calculateAllGamePopularity(today);
     },
     start: true
   });
@@ -93,11 +103,13 @@ Game.prototype.startPopularityCron = function() {
 
 //  We start the cron that calculates the game popularity calculations
 Game.prototype.calculateAllGamePopularity = function(today, cb) {
-  _db.Game.find().
+  var _this = this;
+
+  _this._db.Game.find().
   then(function(allGames) {
       function updateGamePopularity(i) {
         if (i < allGames.length) {
-          _db.Gamelog.find({
+          _this._db.Gamelog.find({
             where: {
               gameId: allGames[i].id,
               playedOn: today
@@ -105,7 +117,7 @@ Game.prototype.calculateAllGamePopularity = function(today, cb) {
           }).
           then(function(gamelogsFound) {
               if (gamelogsFound.length) {
-                _db.Gamepopularitylog.findOrCreate({
+                _this._db.Gamepopularitylog.findOrCreate({
                   where: {
                     date: today,
                     gameId: allGames[i].id

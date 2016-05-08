@@ -4,12 +4,10 @@ var config = require('../praxbot/config');
 
 module.exports = User;
 
-
 function User(parent) {
   utility.log('Init - User');
   this._parent = parent;
-  this._User = this;
-  this._Bot = parent.client;
+  this._bot = parent.client;
   this._db = parent.app.models;
   this.initEvents();
 }
@@ -19,18 +17,18 @@ function User(parent) {
 User.prototype.initEvents = function() {
   var _this = this;
 
-  _this._Bot.on('serverNewMember', function(server, user) {
+  _this._bot.on('serverNewMember', function(server, user) {
     _this.handleOnNewMember(server,user);
   });
-  _this._Bot.on('serverMemberUpdated', function(server, user) {
+  _this._bot.on('serverMemberUpdated', function(server, user) {
     _this.handleOnServerMemberUpdated(server,user);
   });
-  _this._Bot.on('serverMemberRemoved', function(server, user) {
+  _this._bot.on('serverMemberRemoved', function(server, user) {
     _this.handleOnServerMemberRemoved(server,user);
   });
-  _this._Bot.on('presence', function(oldUser, newUser) {
-    _this._User.changeUsername(oldUser, newUser);
-    _this._User.changeAvatar(oldUser, newUser);
+  _this._bot.on('presence', function(oldUser, newUser) {
+    _this.changeUsername(oldUser, newUser);
+    _this.changeAvatar(oldUser, newUser);
   });
 };
 
@@ -38,8 +36,8 @@ User.prototype.initEvents = function() {
 User.prototype.handleOnNewMember = function(server, user) {
   var _this = this;
 
-  _this._User.newMember(server, user);
-  _this._User.syncDBWithDiscord(server, user, 'true');
+  _this.newMember(server, user);
+  _this.syncDBWithDiscord(server, user, 'true');
   utility.log(user.username + ' joined the server');
 };
 
@@ -47,7 +45,7 @@ User.prototype.handleOnNewMember = function(server, user) {
 User.prototype.handleOnServerMemberUpdated = function(server, user) {
   var _this = this;
 
-  _this._User.syncDBWithDiscord(server, user, 'true');
+  _this.syncDBWithDiscord(server, user, 'true');
   utility.log(user.username + ' role updated');
 };
 
@@ -55,7 +53,7 @@ User.prototype.handleOnServerMemberUpdated = function(server, user) {
 User.prototype.handleOnServerMemberRemoved = function(server, user) {
   var _this = this;
 
-  _this._User.syncDBWithDiscord(server, user, 'false');
+  _this.syncDBWithDiscord(server, user, 'false');
   utility.log(user.username + ' removed from server');
 };
 
@@ -63,7 +61,7 @@ User.prototype.handleOnServerMemberRemoved = function(server, user) {
 User.prototype.newMember = function(server, user) {
   var _this = this;
 
-  _this._Bot.sendMessage(config.generalId, user.username +
+  _this._bot.sendMessage(config.generalId, user.username +
     ' is new on the Praxus Discord. Welcome!');
 };
 
@@ -72,7 +70,7 @@ User.prototype.changeUsername = function(oldUser, newUser) {
   var _this = this;
 
   if (oldUser.username !== newUser.username) {
-    _this._Bot.sendMessage(config.generalId, oldUser.username +
+    _this._bot.sendMessage(config.generalId, oldUser.username +
       ' changed username to ' + newUser.username);
     return new BPromise(function(resolve, reject) {
       _this._db.Gamer.updateUser(newUser, function(saved) {
@@ -113,5 +111,34 @@ User.prototype.syncDBWithDiscord = function(server, user, activeDiscordAccount) 
       }).
       catch(reject);
     });
+  });
+};
+
+
+User.prototype.syncDiscordUser = function(user) {
+  var _this = this;
+
+  return new BPromise(function(resolve, reject) {
+    _this._db.Gamer.findOrCreate({
+      where: {
+        discordUserId: user.id
+      }
+    }, {
+      userName: user.username,
+      discordUserId: user.id,
+      role: 'Guest',
+      discordAvatarURL:  user.avatarURL || '',
+      activeDiscordAccount: 'true',
+      forumAlias: ''
+    })
+    .then(function(gamer) {
+      var curGamer = gamer[0];
+      var server = _this._bot.servers[0];
+      curGamer.role = utility.getPrimaryRole(server.rolesOfUser(curGamer));
+
+      return curGamer.save();
+    })
+    .then(resolve)
+    .catch(reject);
   });
 };

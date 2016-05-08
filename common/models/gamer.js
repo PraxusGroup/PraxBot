@@ -1,3 +1,5 @@
+var BPromise = require('bluebird');
+
 module.exports = function(Gamer) {
 
   //gamer.app.models.games
@@ -66,30 +68,44 @@ module.exports = function(Gamer) {
   // Run the main functionality for the bot in creating or finding a user.
   Gamer.syncDBWithDiscord = function(userObject, cb) {
     var avatar = (userObject.avatarURL) ? userObject.avatarURL : '';
-    Gamer.findOrCreate({
-      where: {
-        discordUserId: userObject.id
-      }
-    }, {
-      userName: userObject.username,
-      discordUserId: userObject.id,
-      role: 'Guest',
-      discordAvatarURL: avatar,
-      lastDiscordChatMessage: ZERODATE,
-      activeDiscordAccount: 'true',
-      lastDiscordVoiceConnect: ZERODATE,
-      lastForumPost: ZERODATE,
-      lastForumVisit: ZERODATE,
-      forumAlias: ''
-    }).
-    then(function(gamer) {
-      var curGamer = gamer[0];
-      return curGamer.save();
-    }).
-    then(function(saved) {
-      return [saved, 0];
-    }).
-    then(cb);
+
+    return new BPromise(function(resolve, reject) {
+      Gamer.findOrCreate({
+        where: {
+          discordUserId: userObject.id
+        }
+      }, {
+        userName: userObject.username,
+        discordUserId: userObject.id,
+        role: 'Guest',
+        discordAvatarURL: avatar,
+        lastDiscordChatMessage: ZERODATE,
+        activeDiscordAccount: 'true',
+        lastDiscordVoiceConnect: ZERODATE,
+        lastForumPost: ZERODATE,
+        lastForumVisit: ZERODATE,
+        forumAlias: ''
+      })
+      .then(function(gamer) {
+        var curGamer = gamer[0];
+        return curGamer.save();
+      })
+      .then(function(saved) {
+        return [saved, 0];
+      })
+      .then(function(saved) {
+        resolve(saved);
+        if(typeof cb === 'function') {
+          cb(null, saved);
+        }
+      })
+      .catch(function(err) {
+        reject(err);
+        if(typeof cb === 'function') {
+          cb(err);
+        }
+      });
+    });
   };
 
   Gamer.remoteMethod(

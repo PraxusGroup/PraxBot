@@ -18,9 +18,11 @@ function Bot(app) {
   _bot
     .login()
     .then(_bot.loadCache)
-    .then(_bot.syncCacheWithDB)
     .then(_bot.initModules)
-    .then(utility.log)
+    .then(_bot.syncCacheWithDB)
+    .then(function(resolved) {
+      utility.log('Bot modules initialized');
+    })
     .catch(utility.err);
 }
 
@@ -59,41 +61,56 @@ Bot.prototype.initModules = function(_bot) {
   this.User = new User(_bot);
   this.Chat = new Chat(_bot);
   this.Game = new Game(_bot);
-  return BPromise.resolve('Bot modules initialized');
+  return BPromise.resolve(_bot);
 };
 
 // Facade function for getting the server object
 // We need this object every time we deal with a user's role.
 Bot.prototype.getServerObject = function() {
-  var _bot = this;
-  return _bot.client.servers.get('id', config.serverId);
+  return this.client.servers.get('id', config.serverId);
 };
 
 // We run this after caching, this will put every user in the DB
 // we did not get with the newuser event, as well as fix member roles.
 Bot.prototype.syncCacheWithDB = function(_bot) {
+  var _this = this;
   utility.log('Synchronizing cache with DB');
   var allMembers = _bot.client.servers[0].members;
   var server = _bot.client.servers[0];
   var Gamer = _bot.app.models.Gamer;
-  var i = 0;
 
   return new BPromise(function(resolve, reject) {
+    var promises = [];
+
+    allMembers.forEach(function(member) {
+      promises.push(_this.User.syncDiscordUser(member));
+    });
+
+    BPromise
+      .all(promises)
+      .then(function(res) {
+        utility.log('Synchronized ' + allMembers.length + ' users with DB');
+        resolve(res);
+      })
+      .catch(reject);
+
+    /*
     function updateMember(i) {
       if (i < allMembers.length) {
         var primaryRole = utility.getPrimaryRole(server.rolesOfUser(allMembers[i]));
-        Gamer.syncDBWithDiscord(allMembers[i], function(user) {
+        , function(user) {
           user[0].role = primaryRole;
-          user[0].save().
-          then(function (saved){
-            updateMember(i + 1);
-          });
+
+          user[0].save()
+            .then(function (saved){
+              updateMember(i + 1);
+            });
         });
       } else {
         utility.log('Synchronized ' + allMembers.length + ' users with DB');
         resolve(_bot);
       }
     }
-    updateMember(0);
+    updateMember(0);*/
   });
 };
